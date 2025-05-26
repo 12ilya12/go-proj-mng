@@ -15,7 +15,7 @@ func JwtAuthentication(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//Список эндпоинтов, не требующих аутентификации
-		notAuth := []string{"/api/user/new", "/api/user/login"}
+		notAuth := []string{"/api/user/new", "/api/user/login", "/alive"}
 		//Путь запроса
 		requestPath := r.URL.Path
 
