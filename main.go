@@ -2,16 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"os"
 
 	"github.com/12ilya12/go-proj-mng/app"
 	"github.com/12ilya12/go-proj-mng/controllers"
+	"github.com/12ilya12/go-proj-mng/initializers"
 	u "github.com/12ilya12/go-proj-mng/utils"
 	"github.com/gorilla/mux"
 )
 
 func main() {
+	//Инициализируем конфиг
+	config, err := initializers.LoadConfig()
+	if err != nil {
+		log.Fatal("Ошибка при загрузке переменных среды", err)
+	}
+
+	//Соединение с БД
+	initializers.ConnectDB(&config)
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/auth/register", controllers.Register).Methods("POST")
@@ -23,14 +33,13 @@ func main() {
 	//Подключаем мидлвар для аутентификации по JWT
 	router.Use(app.JwtAuthentication)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
+	if config.ServerPort == "" {
+		config.ServerPort = "8000"
 	}
 
-	fmt.Println(port)
+	fmt.Println(config.ServerPort)
 
-	err := http.ListenAndServe(":"+port, router)
+	err = http.ListenAndServe(":"+config.ServerPort, router)
 	if err != nil {
 		fmt.Print(err)
 	}
