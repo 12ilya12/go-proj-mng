@@ -6,6 +6,7 @@ import (
 
 	"github.com/12ilya12/go-proj-mng/initializers"
 	"github.com/12ilya12/go-proj-mng/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func init() {
@@ -63,7 +64,12 @@ func main() {
 		}
 	}
 	for _, user := range users {
-		err := initializers.DB.Save(&user).Error
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			panic(err)
+		}
+		user.Password = string(hashedPassword)
+		err = initializers.DB.Save(&user).Error
 		if err != nil {
 			fmt.Printf("Ошибка при добавлении пользователя %s/n", user.Login)
 		}
