@@ -18,7 +18,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Ошибка при загрузке переменных среды", err)
 	}
-
 	//Соединение с БД
 	initializers.ConnectDB(&config)
 
