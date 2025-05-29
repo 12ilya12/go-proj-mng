@@ -8,6 +8,7 @@ import (
 	"github.com/12ilya12/go-proj-mng/app"
 	"github.com/12ilya12/go-proj-mng/controllers"
 	"github.com/12ilya12/go-proj-mng/initializers"
+	"github.com/12ilya12/go-proj-mng/routes"
 	u "github.com/12ilya12/go-proj-mng/utils"
 	"github.com/gorilla/mux"
 )
@@ -21,9 +22,12 @@ func main() {
 	//Соединение с БД
 	initializers.ConnectDB(&config)
 
-	router := mux.NewRouter()
+	AuthController := controllers.NewAuthController(initializers.DB)
+	AuthRouteController := routes.NewAuthRouteController(AuthController)
 
-	router.HandleFunc("/auth/register", controllers.Register).Methods("POST")
+	router := mux.NewRouter()
+	AuthRouteController.AuthRoute(router)
+	//router.HandleFunc("/auth/register", controllers.Register).Methods("POST")
 
 	router.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {
 		u.Respond(w, u.Message(true, "Жив, цел, Орёл!"))

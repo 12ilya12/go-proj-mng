@@ -21,6 +21,13 @@ type UserResponse struct {
 	Role     string `json:"role"`
 }
 
+type UserCreate struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	FullName string `json:"fullname"`
+	Email    string `json:"email"`
+}
+
 /*
 JWT claims struct
 */
