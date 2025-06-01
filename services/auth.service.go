@@ -11,7 +11,7 @@ func NewAuthService(userService UserService) AuthService {
 	return AuthService{userService}
 }
 
-func (ac *AuthService) Register(user models.UserCreate) (userResponce models.UserResponse, err error) {
-
+func (as *AuthService) Register(user *models.UserCreate) (userResponce models.UserResponse, err error) {
+	userResponce, err = as.userService.CreateUser(user)
 	return
 }

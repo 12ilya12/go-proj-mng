@@ -18,19 +18,25 @@ func NewAuthController(authService services.AuthService) AuthController {
 }
 
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	userCreateDto := &models.UserCreate{}
+	userCreateDto := models.UserCreate{}
 	//Декодируем тело запроса в структуру dto
-	err := json.NewDecoder(r.Body).Decode(userCreateDto)
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&userCreateDto)
+	//b, err := json.Marshal(r.Body)
+	//fmt.Println(b)
 	if err != nil {
 		u.Respond(w, u.Message(false, "Некорректный запрос"))
 		return
 	}
-	newUser, err := ac.authService.Register(userCreateDto)
+	newUser, err := ac.authService.Register(&userCreateDto)
 	if err != nil {
 		u.Respond(w, u.Message(false, "Ошибка при регистрации пользователя"))
 		return
 	}
-	u.Respond(w, newUser)
+
+	//u.Respond(w, newUser)
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newUser)
 }
 
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
