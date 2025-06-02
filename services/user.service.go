@@ -13,7 +13,12 @@ func NewUserService(userRepo repos.UserRepository) UserService {
 	return UserService{userRepo}
 }
 
-func (us *UserService) CreateUser(user *models.UserCreate) (userResponce models.UserResponse, err error) {
-	userResponce, err = us.userRepo.AddUser(user)
+func (us *UserService) CreateUser(user *models.User) (err error) {
+	//Не планируется создавать администраторов
+	user.Role = "USER"
+
+	err = us.userRepo.AddUser(user)
+
+	//Отфильтровать какие поля возвращать в ответе
 	return
 }

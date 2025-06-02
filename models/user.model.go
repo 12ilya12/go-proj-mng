@@ -2,18 +2,20 @@ package models
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	ID       uint32 `gorm:"primary_key"`
-	Login    string `gorm:"type:varchar(255);not null;"`
-	Password string `gorm:"not null;"`
-	FullName string `gorm:"type:varchar(255);not null;"`
-	Email    string `gorm:"type:varchar(255);not null;"`
-	Role     string `gorm:"type:varchar(255);not null;"`
+	//ID       uint32 `gorm:"primary_key" json:"id"`
+	gorm.Model
+	Login    string `gorm:"type:varchar(255);not null;" json:"login"`
+	Password string `gorm:"not null;" json:"password"`
+	FullName string `gorm:"type:varchar(255);not null;" json:"fullname"`
+	Email    string `gorm:"type:varchar(255);not null;" json:"email"`
+	Role     string `gorm:"type:varchar(255);not null;" json:"role"`
 }
 
-type UserResponse struct {
+/*type UserResponse struct {
 	ID       uint32 `json:"id"`
 	Login    string `json:"login"`
 	FullName string `json:"fullname"`
@@ -26,7 +28,7 @@ type UserCreate struct {
 	Password string `json:"password"`
 	FullName string `json:"fullname"`
 	Email    string `json:"email"`
-}
+}*/
 
 /*
 JWT claims struct
