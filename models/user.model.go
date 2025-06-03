@@ -33,7 +33,8 @@ type UserCreate struct {
 /*
 JWT claims struct
 */
-type Token struct {
+type Claims struct {
 	UserId uint
+	Role   string
 	jwt.StandardClaims
 }

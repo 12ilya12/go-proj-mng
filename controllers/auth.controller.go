@@ -38,13 +38,17 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
-	/* account := &models.Account{}
-	err := json.NewDecoder(r.Body).Decode(account) //decode the request body into struct and failed if any error occur
+	userDto := models.User{}
+	err := json.NewDecoder(r.Body).Decode(userDto)
 	if err != nil {
 		u.Respond(w, u.Message(false, "Invalid request"))
 		return
 	}
 
-	resp := models.Login(account.Login, account.Password)
-	u.Respond(w, resp) */
+	token, err := ac.authService.Login(userDto.Login, userDto.Password)
+	if err != nil {
+		u.Respond(w, map[string]interface{}{"success": "false"})
+		return
+	}
+	u.Respond(w, map[string]interface{}{"success": "true", "access_token": token})
 }

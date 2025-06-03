@@ -53,9 +53,9 @@ func JwtAuthentication(next http.Handler) http.Handler {
 
 		//Берём часть непосредственно с токеном
 		tokenPart := splitted[1]
-		tk := &models.Token{}
+		claims := &models.Claims{}
 
-		token, err := jwt.ParseWithClaims(tokenPart, tk, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenPart, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("token_password")), nil
 		})
 
@@ -79,7 +79,7 @@ func JwtAuthentication(next http.Handler) http.Handler {
 
 		//Аутентификация пройдена. Продолжаем обработку запроса, добавив в контекст информацию об аутентифицированном пользователя
 		//fmt.Sprintf("User %", tk.UserId)
-		ctx := context.WithValue(r.Context(), "user", tk.UserId)
+		ctx := context.WithValue(r.Context(), "user", claims.UserId) //TODO: Добавить роль пользователя в контекст
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
