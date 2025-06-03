@@ -25,6 +25,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		u.Respond(w, u.Message(false, "Некорректный запрос"))
 		return
 	}
+	//TODO: Валидация данных пользователя
 	err = ac.authService.Register(&userDto)
 	if err != nil {
 		u.Respond(w, u.Message(false, "Ошибка при регистрации пользователя"))
