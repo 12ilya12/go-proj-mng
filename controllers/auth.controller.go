@@ -20,8 +20,7 @@ func NewAuthController(authService services.AuthService) AuthController {
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	userDto := models.User{}
 	//Декодируем тело запроса в структуру dto
-	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&userDto)
+	err := json.NewDecoder(r.Body).Decode(&userDto)
 	if err != nil {
 		u.Respond(w, u.Message(false, "Некорректный запрос"))
 		return
@@ -39,7 +38,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	userDto := models.User{}
-	err := json.NewDecoder(r.Body).Decode(userDto)
+	err := json.NewDecoder(r.Body).Decode(&userDto)
 	if err != nil {
 		u.Respond(w, u.Message(false, "Invalid request"))
 		return
@@ -47,7 +46,8 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 	token, err := ac.authService.Login(userDto.Login, userDto.Password)
 	if err != nil {
-		u.Respond(w, map[string]interface{}{"success": "false"})
+		w.WriteHeader(http.StatusUnauthorized)
+		u.Respond(w, map[string]interface{}{"success": "false", "error": err.Error()})
 		return
 	}
 	u.Respond(w, map[string]interface{}{"success": "true", "access_token": token})

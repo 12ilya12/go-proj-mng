@@ -77,9 +77,15 @@ func JwtAuthentication(next http.Handler) http.Handler {
 			return
 		}
 
-		//Аутентификация пройдена. Продолжаем обработку запроса, добавив в контекст информацию об аутентифицированном пользователя
+		//Аутентификация пройдена. Продолжаем обработку запроса, добавив в контекст информацию об аутентифицированном пользователе
 		//fmt.Sprintf("User %", tk.UserId)
-		ctx := context.WithValue(r.Context(), "user", claims.UserId) //TODO: Добавить роль пользователя в контекст
+		type contextKey uint
+		const ( //Решить куда перенести эти константы
+			UserContextKey contextKey = 1
+			RoleContextKey contextKey = 2
+		)
+		ctx := context.WithValue(r.Context(), UserContextKey /*"user"*/, claims.UserId)
+		ctx = context.WithValue(ctx, RoleContextKey /*"role"*/, claims.Role)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})

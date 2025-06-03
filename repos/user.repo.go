@@ -1,8 +1,6 @@
 package repos
 
 import (
-	"errors"
-
 	"github.com/12ilya12/go-proj-mng/models"
 	"gorm.io/gorm"
 )
@@ -17,11 +15,14 @@ func NewUserRepository(DB *gorm.DB) UserRepository {
 
 func (ur *UserRepository) AddUser(user *models.User) (err error) {
 
-	ur.DB.Create(user)
+	err = ur.DB.Create(user).Error
 
-	if user.ID <= 0 {
-		err = errors.New("Ошибка при создании пользователя в базе данных")
-	}
+	return
+}
+
+func (ur *UserRepository) FindByLogin(login string) (user models.User, err error) {
+
+	err = ur.DB.First(&user, "login = ?", login).Error
 
 	return
 }

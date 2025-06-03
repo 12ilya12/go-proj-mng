@@ -22,3 +22,8 @@ func (us *UserService) CreateUser(user *models.User) (err error) {
 	//Отфильтровать какие поля возвращать в ответе
 	return
 }
+
+func (us *UserService) FindByLogin(login string) (user models.User, err error) {
+	user, err = us.userRepo.FindByLogin(login)
+	return
+}

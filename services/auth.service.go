@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"os"
 
 	"github.com/12ilya12/go-proj-mng/models"
@@ -36,14 +37,14 @@ func (as *AuthService) Login(login string, password string) (accessToken string,
 	//Ищем пользователя по логину
 	user, err := as.userService.FindByLogin(login)
 	if err != nil {
-		//Пользователь не найден
+		err = errors.New("пользователь с логином " + login + " не найден")
 		return
 	}
 
 	//Сверяем пароль
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		//Пароль не совпал
+		err = errors.New("неверный логин или пароль")
 		return
 	}
 
