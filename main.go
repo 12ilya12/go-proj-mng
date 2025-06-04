@@ -26,19 +26,23 @@ func main() {
 
 	//Инициализация репозиториев
 	UserRepo := repos.NewUserRepository(initializers.DB)
+	StatusRepo := repos.NewStatusRepository(initializers.DB)
 
 	//Инициализация сервисов
 	UserService := services.NewUserService(UserRepo)
 	AuthService := services.NewAuthService(UserService)
+	StatusService := services.NewStatusService(StatusRepo)
 
 	//Инициализация контроллеров
 	AuthController := controllers.NewAuthController(AuthService)
 	AuthRouteController := routes.NewAuthRouteController(AuthController)
+	StatusController := controllers.NewStatusController(StatusService)
+	StatusRouteController := routes.NewStatusRouteController(StatusController)
 
 	//Заполнение роутов
 	router := mux.NewRouter()
 	AuthRouteController.AuthRoute(router)
-	//router.HandleFunc("/auth/register", controllers.Register).Methods("POST")
+	StatusRouteController.StatusRoute(router)
 
 	router.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {
 		u.Respond(w, u.Message(true, "Жив, цел, Орёл!"))
