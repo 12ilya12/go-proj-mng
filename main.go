@@ -45,7 +45,7 @@ func main() {
 	StatusRouteController.StatusRoute(router)
 
 	router.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {
-		u.Respond(w, u.Message(true, "Жив, цел, Орёл!"))
+		u.Respond(w, u.Message("Жив, цел, Орёл!"))
 	}).Methods("GET")
 
 	//Подключаем мидлвар для аутентификации по JWT

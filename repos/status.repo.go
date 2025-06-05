@@ -14,6 +14,11 @@ func NewStatusRepository(DB *gorm.DB) StatusRepository {
 }
 
 func (sr *StatusRepository) GetAll() (statuses []models.Status, err error) {
+	err = sr.DB.Find(&statuses).Error
+	return
+}
 
+func (sr *StatusRepository) GetById(id int) (status models.Status, err error) {
+	err = sr.DB.First(&status, id).Error
 	return
 }

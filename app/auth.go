@@ -34,20 +34,16 @@ func JwtAuthentication(next http.Handler) http.Handler {
 
 		if tokenHeader == "" {
 			//Токена нет в запросе, возвращаем 403
-			response = u.Message(false, "Missing auth token")
-			w.WriteHeader(http.StatusForbidden)
-			w.Header().Add("Content-Type", "application/json")
-			u.Respond(w, response)
+			response = u.Message("Отсутствует аутентификационный токен")
+			u.Respond(w, response, http.StatusForbidden)
 			return
 		}
 
 		//Токен записывается в формате `Bearer {token-body}`.
 		splitted := strings.Split(tokenHeader, " ")
 		if len(splitted) != 2 {
-			response = u.Message(false, "Invalid/Malformed auth token")
-			w.WriteHeader(http.StatusForbidden)
-			w.Header().Add("Content-Type", "application/json")
-			u.Respond(w, response)
+			response = u.Message("Невалидный/некорректный токен")
+			u.Respond(w, response, http.StatusForbidden)
 			return
 		}
 
@@ -61,19 +57,15 @@ func JwtAuthentication(next http.Handler) http.Handler {
 
 		if err != nil {
 			//Некорректный токен. Возвращаем 403
-			response = u.Message(false, "Malformed authentication token")
-			w.WriteHeader(http.StatusForbidden)
-			w.Header().Add("Content-Type", "application/json")
-			u.Respond(w, response)
+			response = u.Message("Malformed authentication token")
+			u.Respond(w, response, http.StatusForbidden)
 			return
 		}
 
 		if !token.Valid {
 			//Токен не валиден. Возможно пользователь не зарегистрирован. Возвращаем 403
-			response = u.Message(false, "Token is not valid.")
-			w.WriteHeader(http.StatusForbidden)
-			w.Header().Add("Content-Type", "application/json")
-			u.Respond(w, response)
+			response = u.Message("Токен не валиден. Возможно пользователь не зарегистрирован.")
+			u.Respond(w, response, http.StatusForbidden)
 			return
 		}
 

@@ -17,3 +17,8 @@ func (ss *StatusService) GetAll( /*pagingOptions*/ ) (statuses []models.Status, 
 	statuses, err = ss.statusRepo.GetAll( /*pagingOptions*/ )
 	return
 }
+
+func (ss *StatusService) GetById(id int) (status models.Status, err error) {
+	status, err = ss.statusRepo.GetById(id)
+	return
+}
