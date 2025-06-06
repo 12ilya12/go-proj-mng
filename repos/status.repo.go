@@ -2,6 +2,7 @@ package repos
 
 import (
 	"github.com/12ilya12/go-proj-mng/models"
+	"github.com/12ilya12/go-proj-mng/pagination"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,8 @@ func NewStatusRepository(DB *gorm.DB) StatusRepository {
 	return StatusRepository{DB}
 }
 
-func (sr *StatusRepository) GetAll() (statuses []models.Status, err error) {
+func (sr *StatusRepository) GetAll(pagingOptions pagination.PagingOptions) (statuses []models.Status, err error) {
+	//TODO: Обработать pagingOptions с учётом того, что эти параметры не обязательны. Вернуть Paging<models.Status>
 	err = sr.DB.Find(&statuses).Error
 	return
 }

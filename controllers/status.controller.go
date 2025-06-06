@@ -6,7 +6,9 @@ import (
 	"strconv"
 
 	"github.com/12ilya12/go-proj-mng/models"
+	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/services"
+	"github.com/12ilya12/go-proj-mng/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -19,8 +21,10 @@ func NewStatusController(statusService services.StatusService) StatusController 
 }
 
 func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
-	//TODO: Реализовать пагинацию. Параметры пагинации будут в Query.
-	statuses, err := sc.statusService.GetAll( /*pagingOptions*/ )
+	var pagingOptions pagination.PagingOptions
+	utils.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
+
+	statuses, err := sc.statusService.GetAll(pagingOptions)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
