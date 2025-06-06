@@ -22,7 +22,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	//Декодируем тело запроса в структуру dto
 	err := json.NewDecoder(r.Body).Decode(&userDto)
 	if err != nil {
-		u.Respond(w, u.Message("Некорректный запрос"), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	//TODO: Валидация данных пользователя
@@ -30,7 +30,7 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//TODO: Статус ответа должен определяться в зависимости от ошибки.
 		//Не факт, что проблема в запросе. Например, могут быть проблемы с БД.
-		u.Respond(w, u.Message(err.Error()), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -42,14 +42,13 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	userDto := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&userDto)
 	if err != nil {
-		u.Respond(w, u.Message("Некорректный запрос. Ошибка: "+err.Error()), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	token, err := ac.authService.Login(userDto.Login, userDto.Password)
 	if err != nil {
-		//w.WriteHeader(http.StatusUnauthorized)
-		u.Respond(w, map[string]interface{}{"error": err.Error()}, http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	u.Respond(w, map[string]interface{}{"access_token": token})
