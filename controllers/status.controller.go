@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/services"
+	u "github.com/12ilya12/go-proj-mng/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -33,7 +35,8 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-
+		u.Respond(w, u.Message("Некорректный запрос"), http.StatusBadRequest)
+		return
 	}
 	status, err := sc.statusService.GetById(id)
 	if err != nil {
@@ -41,4 +44,60 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(status)
+}
+
+func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
+	statusDto := models.Status{}
+	err := json.NewDecoder(r.Body).Decode(&statusDto)
+	if err != nil {
+		u.Respond(w, u.Message("Некорректный запрос. Ошибка: "+err.Error()), http.StatusBadRequest)
+		return
+	}
+	//TODO: Валидация данных пользователя
+	err = sc.statusService.Create(&statusDto)
+	if err != nil {
+		//TODO: Статус ответа должен определяться в зависимости от ошибки.
+		//Не факт, что проблема в запросе. Например, могут быть проблемы с БД.
+		u.Respond(w, u.Message(err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(statusDto)
+}
+
+func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		u.Respond(w, u.Message("Некорректный запрос"), http.StatusBadRequest)
+		return
+	}
+	newStatusDto := models.Status{}
+	err = json.NewDecoder(r.Body).Decode(&newStatusDto)
+	if err != nil {
+		u.Respond(w, u.Message("Некорректный запрос. Ошибка: "+err.Error()), http.StatusBadRequest)
+		return
+	}
+	err = sc.statusService.Update(id, &newStatusDto)
+	if err != nil {
+		//TODO: Сообщение об ошибке
+	}
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newStatusDto)
+}
+
+func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		u.Respond(w, u.Message("Некорректный запрос"), http.StatusBadRequest)
+		return
+	}
+	err = sc.statusService.Delete(id)
+	if err != nil {
+		//TODO: Сообщение об ошибке
+	}
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(nil)
 }

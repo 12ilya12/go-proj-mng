@@ -34,7 +34,6 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//u.Respond(w, newUser)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(userDto)
 }
