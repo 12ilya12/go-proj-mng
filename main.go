@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/12ilya12/go-proj-mng/app"
 	"github.com/12ilya12/go-proj-mng/controllers"
 	"github.com/12ilya12/go-proj-mng/initializers"
+	"github.com/12ilya12/go-proj-mng/middlewares"
 	"github.com/12ilya12/go-proj-mng/repos"
 	"github.com/12ilya12/go-proj-mng/routes"
 	"github.com/12ilya12/go-proj-mng/services"
@@ -49,7 +49,7 @@ func main() {
 	}).Methods("GET")
 
 	//Подключаем мидлвар для аутентификации по JWT
-	router.Use(app.JwtAuthentication)
+	router.Use(middlewares.JwtAuthentication)
 
 	if config.ServerPort == "" {
 		config.ServerPort = "8000"

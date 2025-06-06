@@ -1,7 +1,8 @@
-package app
+package middlewares
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -9,6 +10,13 @@ import (
 	"github.com/12ilya12/go-proj-mng/models"
 	u "github.com/12ilya12/go-proj-mng/utils"
 	"github.com/dgrijalva/jwt-go"
+)
+
+type contextKey uint
+
+const (
+	UserContextKey contextKey = 1
+	RoleContextKey contextKey = 2
 )
 
 func JwtAuthentication(next http.Handler) http.Handler {
@@ -70,15 +78,26 @@ func JwtAuthentication(next http.Handler) http.Handler {
 		}
 
 		//Аутентификация пройдена. Продолжаем обработку запроса, добавив в контекст информацию об аутентифицированном пользователе
-		//fmt.Sprintf("User %", tk.UserId)
-		type contextKey uint
-		const ( //Решить куда перенести эти константы
-			UserContextKey contextKey = 1
-			RoleContextKey contextKey = 2
-		)
-		ctx := context.WithValue(r.Context(), UserContextKey /*"user"*/, claims.UserId)
-		ctx = context.WithValue(ctx, RoleContextKey /*"role"*/, claims.Role)
+		ctx := context.WithValue(r.Context(), UserContextKey, claims.UserId)
+		ctx = context.WithValue(ctx, RoleContextKey, claims.Role)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func RoleBasedAccessControl(allowedRoles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			role := fmt.Sprintf("%v", r.Context().Value(RoleContextKey))
+			for _, allowedRole := range allowedRoles {
+				if role == allowedRole {
+					//Доступ разрешён
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			//Доступ запрещён
+			http.Error(w, "Пользователю с ролью "+role+" доступ запрещён", http.StatusForbidden)
+		})
+	}
 }
