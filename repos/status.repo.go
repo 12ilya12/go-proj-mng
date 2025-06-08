@@ -3,6 +3,7 @@ package repos
 import (
 	"math"
 
+	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"gorm.io/gorm"
@@ -65,18 +66,32 @@ func (sr *StatusRepository) Update(id int, newStatus *models.Status) (err error)
 	status := models.Status{}
 	err = sr.DB.First(&status, id).Error
 	if err != nil {
-		//TODO: Вернуть ошибку со статусом NotFound
+		//Не найден статус с заданным идентификатором, либо другая проблема с БД
 		return
 	}
 	status.Name = newStatus.Name
 	err = sr.DB.Save(&status).Error
-	if err != nil {
-		//TODO: Тут тоже нужно записать статус ошибки.
-	}
 	return
 }
 
+func (sr *StatusRepository) hasTasks(statusId int) bool {
+	tasksWithStatusCount := int64(0)
+	sr.DB.Table("tasks").Where("status_id = ?", statusId).Count(&tasksWithStatusCount)
+	return tasksWithStatusCount > 0
+}
+
 func (sr *StatusRepository) Delete(id int) (err error) {
+	err = sr.DB.First(&models.Status{}, id).Error
+	if err != nil {
+		//Не найден статус с заданным идентификатором, либо другая проблема с БД
+		return
+	}
+
+	if sr.hasTasks(id) {
+		err = common.ErrStatusHasRelatedTasks
+		return
+	}
+
 	err = sr.DB.Delete(&models.Status{}, id).Error
 	return
 }

@@ -2,14 +2,17 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/services"
 	"github.com/12ilya12/go-proj-mng/utils"
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
 type StatusController struct {
@@ -26,10 +29,10 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	statusesWithPaging, err := sc.statusService.GetAll(pagingOptions)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//TODO: Проверить какие ошибки может выдать gorm
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	//TODO: В ответе помимо статусов должны быть данные пагинации
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(statusesWithPaging)
 }
@@ -43,7 +46,12 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 	}
 	status, err := sc.statusService.GetById(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			//Другая проблема с БД
+			http.Error(w, err.Error(), http.StatusBadGateway)
+		}
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
@@ -60,9 +68,8 @@ func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 	//TODO: Валидация данных пользователя
 	err = sc.statusService.Create(&statusDto)
 	if err != nil {
-		//TODO: Статус ответа должен определяться в зависимости от ошибки.
-		//Не факт, что проблема в запросе. Например, могут быть проблемы с БД.
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//TODO: Проверить какие ошибки может выдать gorm
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 
@@ -77,18 +84,24 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	newStatusDto := models.Status{}
-	err = json.NewDecoder(r.Body).Decode(&newStatusDto)
+	newStatus := models.Status{}
+	err = json.NewDecoder(r.Body).Decode(&newStatus)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = sc.statusService.Update(id, &newStatusDto)
+	err = sc.statusService.Update(id, &newStatus)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			//Другая проблема с БД
+			http.Error(w, err.Error(), http.StatusBadGateway)
+		}
+		return
 	}
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newStatusDto)
+	json.NewEncoder(w).Encode(newStatus)
 }
 
 func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +113,15 @@ func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	err = sc.statusService.Delete(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, common.ErrStatusHasRelatedTasks) {
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			//Другая проблема с БД
+			http.Error(w, err.Error(), http.StatusBadGateway)
+		}
+		return
 	}
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(nil)
