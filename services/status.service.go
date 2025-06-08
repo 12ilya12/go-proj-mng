@@ -14,8 +14,8 @@ func NewStatusService(statusRepo repos.StatusRepository) StatusService {
 	return StatusService{statusRepo}
 }
 
-func (ss *StatusService) GetAll(pagingOptions pagination.PagingOptions) (statuses []models.Status, err error) {
-	statuses, err = ss.statusRepo.GetAll(pagingOptions)
+func (ss *StatusService) GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Status], err error) {
+	statusesWithPaging, err = ss.statusRepo.GetAll(pagingOptions)
 	return
 }
 

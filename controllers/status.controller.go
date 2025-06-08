@@ -24,14 +24,14 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 	var pagingOptions pagination.PagingOptions
 	utils.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
 
-	statuses, err := sc.statusService.GetAll(pagingOptions)
+	statusesWithPaging, err := sc.statusService.GetAll(pagingOptions)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	//TODO: В ответе помимо статусов должны быть данные пагинации
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(statuses)
+	json.NewEncoder(w).Encode(statusesWithPaging)
 }
 
 func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {

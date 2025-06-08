@@ -1,6 +1,8 @@
 package repos
 
 import (
+	"math"
+
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"gorm.io/gorm"
@@ -14,9 +16,38 @@ func NewStatusRepository(DB *gorm.DB) StatusRepository {
 	return StatusRepository{DB}
 }
 
-func (sr *StatusRepository) GetAll(pagingOptions pagination.PagingOptions) (statuses []models.Status, err error) {
-	//TODO: Обработать pagingOptions с учётом того, что эти параметры не обязательны. Вернуть Paging<models.Status>
-	err = sr.DB.Find(&statuses).Error
+func (sr *StatusRepository) GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Status] /* statuses []models.Status */, err error) {
+	//Собираем данные для ответа в ручке с пагинацией
+	sr.DB.Find(&statusesWithPaging.Items)
+	statusesWithPaging.Pagination.TotalItems = len(statusesWithPaging.Items)
+	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
+		statusesWithPaging.Pagination.TotalPages = 1
+	} else { //Подсчитваем количество страниц
+		statusesWithPaging.Pagination.TotalPages =
+			int(math.Ceil(float64(statusesWithPaging.Pagination.TotalItems) / float64(pagingOptions.PageSize)))
+	}
+
+	//Значения по умолчанию для pagingOptions
+	if pagingOptions.Order != "desc" {
+		pagingOptions.Order = "asc"
+	}
+	if pagingOptions.Page <= 0 {
+		pagingOptions.Page = 1
+	}
+	if pagingOptions.PageSize <= 0 {
+		pagingOptions.PageSize = statusesWithPaging.Pagination.TotalItems
+	}
+	if pagingOptions.OrderBy == "" {
+		pagingOptions.OrderBy = "id"
+	}
+	statusesWithPaging.Pagination.Options = pagingOptions
+
+	//Добываем выборку с учетом параметров пагинации
+	err = sr.DB.Order(pagingOptions.OrderBy + " " + string(pagingOptions.Order)).
+		Limit(pagingOptions.PageSize).
+		Offset((pagingOptions.Page - 1) * pagingOptions.PageSize).
+		Find(&statusesWithPaging.Items).Error
+
 	return
 }
 
