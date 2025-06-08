@@ -16,10 +16,7 @@ func NewUserService(userRepo repos.UserRepository) UserService {
 func (us *UserService) CreateUser(user *models.User) (err error) {
 	//Не планируется создавать администраторов
 	user.Role = "USER"
-
 	err = us.userRepo.AddUser(user)
-
-	//Отфильтровать какие поля возвращать в ответе
 	return
 }
 

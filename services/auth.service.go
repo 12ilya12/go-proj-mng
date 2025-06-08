@@ -25,8 +25,6 @@ func (as *AuthService) Register(user *models.User) (err error) {
 
 	err = as.userService.CreateUser(user)
 
-	//Тут можно создать токен пользователя...
-
 	//Удаляем пароль
 	user.Password = ""
 

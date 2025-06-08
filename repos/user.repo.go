@@ -14,15 +14,11 @@ func NewUserRepository(DB *gorm.DB) UserRepository {
 }
 
 func (ur *UserRepository) AddUser(user *models.User) (err error) {
-
 	err = ur.DB.Create(user).Error
-
 	return
 }
 
 func (ur *UserRepository) FindByLogin(login string) (user models.User, err error) {
-
 	err = ur.DB.First(&user, "login = ?", login).Error
-
 	return
 }

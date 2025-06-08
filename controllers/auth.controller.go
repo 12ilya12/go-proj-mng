@@ -28,12 +28,10 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	//TODO: Валидация данных пользователя
 	err = ac.authService.Register(&userDto)
 	if err != nil {
-		//TODO: Статус ответа должен определяться в зависимости от ошибки.
-		//Не факт, что проблема в запросе. Например, могут быть проблемы с БД.
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		//TODO: Проверить какие ошибки может выдать gorm
+		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(userDto)
 }
