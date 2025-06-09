@@ -59,14 +59,14 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
-	statusDto := models.Status{}
-	err := json.NewDecoder(r.Body).Decode(&statusDto)
+	status := models.Status{}
+	err := json.NewDecoder(r.Body).Decode(&status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	//TODO: Валидация данных пользователя
-	err = sc.statusService.Create(&statusDto)
+	err = sc.statusService.Create(&status)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -74,7 +74,7 @@ func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(statusDto)
+	json.NewEncoder(w).Encode(status)
 }
 
 func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
@@ -84,13 +84,14 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	newStatus := models.Status{}
-	err = json.NewDecoder(r.Body).Decode(&newStatus)
+	updatedStatus := models.Status{}
+	err = json.NewDecoder(r.Body).Decode(&updatedStatus)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = sc.statusService.Update(id, &newStatus)
+	updatedStatus.ID = uint(id)
+	err = sc.statusService.Update(&updatedStatus)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -101,7 +102,7 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newStatus)
+	json.NewEncoder(w).Encode(updatedStatus)
 }
 
 func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
