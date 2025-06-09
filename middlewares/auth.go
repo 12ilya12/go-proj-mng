@@ -7,16 +7,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	u "github.com/12ilya12/go-proj-mng/utils"
 	"github.com/dgrijalva/jwt-go"
-)
-
-type contextKey uint
-
-const (
-	UserContextKey contextKey = 1
-	RoleContextKey contextKey = 2
 )
 
 func JwtAuthentication(next http.Handler) http.Handler {
@@ -78,8 +72,8 @@ func JwtAuthentication(next http.Handler) http.Handler {
 		}
 
 		//Аутентификация пройдена. Продолжаем обработку запроса, добавив в контекст информацию об аутентифицированном пользователе
-		ctx := context.WithValue(r.Context(), UserContextKey, claims.UserId)
-		ctx = context.WithValue(ctx, RoleContextKey, claims.Role)
+		ctx := context.WithValue(r.Context(), common.UserContextKey, claims.UserId)
+		ctx = context.WithValue(ctx, common.RoleContextKey, claims.Role)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
@@ -88,7 +82,7 @@ func JwtAuthentication(next http.Handler) http.Handler {
 func RoleBasedAccessControl(allowedRoles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			role := fmt.Sprintf("%v", r.Context().Value(RoleContextKey))
+			role := fmt.Sprintf("%v", r.Context().Value(common.RoleContextKey))
 			for _, allowedRole := range allowedRoles {
 				if role == allowedRole {
 					//Доступ разрешён
