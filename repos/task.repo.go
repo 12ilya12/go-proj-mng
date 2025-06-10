@@ -2,6 +2,7 @@ package repos
 
 import (
 	"math"
+	"strings"
 
 	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
@@ -17,73 +18,72 @@ func NewTaskRepository(DB *gorm.DB) TaskRepository {
 	return TaskRepository{DB}
 }
 
-// TODO: Произвести рефакторинг функций GetAll и GetAllForUser (возможно объединить в одну). Много дублирования кода и не учитывается, что некоторые параметры могут быть не заданы
-func (sr *TaskRepository) GetAll(pagingOptions pagination.PagingOptions, taskFilters common.TaskFilters) (tasksWithPaging pagination.Paging[models.Task] /* taskes []models.Task */, err error) {
-	//Собираем данные для ответа в ручке с пагинацией
-	sr.DB.Find(&tasksWithPaging.Items)
-	tasksWithPaging.Pagination.TotalItems = len(tasksWithPaging.Items)
+func (sr *TaskRepository) GetAll(pagingOptions pagination.PagingOptions, taskFilters common.TaskFilters) (tasksWithPaging pagination.Paging[models.Task], err error) {
+	//Сортировка. По умолчанию по возрастанию идентификатора.
+	var orderRule string
+	if pagingOptions.OrderBy == "" {
+		orderRule = "id"
+	} else {
+		var columnCount int64
+		sr.DB.Select("column_name").Table("information_schema.columns").
+			Where("table_name = ? AND column_name = ?", "tasks", pagingOptions.OrderBy).Count(&columnCount)
+		if columnCount == 0 {
+			//Колонка, по которой планировалось сортировать, отсутствует в таблице
+			pagingOptions.OrderBy = ""
+			orderRule = "id"
+		} else {
+			orderRule = pagingOptions.OrderBy
+		}
+	}
+	if strings.ToLower(string(pagingOptions.Order)) == "desc" {
+		orderRule += " desc"
+	}
+	tx := sr.DB.Order(orderRule)
+
+	//Пагинация
+	if pagingOptions.PageSize > 0 {
+		tx = tx.Limit(pagingOptions.PageSize)
+	}
+	if pagingOptions.Page > 0 {
+		tx = tx.Offset((pagingOptions.Page - 1) * pagingOptions.PageSize)
+	}
+
+	//Фильтрация
+	if taskFilters.StatusId > 0 {
+		tx = tx.Where("status_id = ?", taskFilters.StatusId)
+	}
+	if taskFilters.CategoryId > 0 {
+		tx = tx.Where("category_id = ?", taskFilters.CategoryId)
+	}
+
+	if strings.ToLower(taskFilters.UserRole) == "admin" {
+		err = tx.Find(&tasksWithPaging.Items).Error
+	} else {
+		//Обычному пользователю показываем только его задачи
+		err = tx.Find(&tasksWithPaging.Items).Where("user_id = ?", taskFilters.UserId).Error
+	}
+
+	//Собираем выходные данные пагинации
+	txForTotalItems := sr.DB.Model(&models.Task{}) //Подсчёт количества задач с учетом фильтраций
+	if taskFilters.StatusId > 0 {
+		txForTotalItems = txForTotalItems.Where("status_id = ?", taskFilters.StatusId)
+	}
+	if taskFilters.CategoryId > 0 {
+		txForTotalItems = txForTotalItems.Where("category_id = ?", taskFilters.CategoryId)
+	}
+	if strings.ToLower(taskFilters.UserRole) == "admin" {
+		txForTotalItems.Count(&tasksWithPaging.Pagination.TotalItems)
+	} else {
+		txForTotalItems.Count(&tasksWithPaging.Pagination.TotalItems).Where("user_id = ?", taskFilters.UserId)
+	}
 	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
 		tasksWithPaging.Pagination.TotalPages = 1
-	} else { //Подсчитваем количество страниц
+	} else { //Подсчитываем количество страниц
 		tasksWithPaging.Pagination.TotalPages =
-			int(math.Ceil(float64(tasksWithPaging.Pagination.TotalItems) / float64(pagingOptions.PageSize)))
-	}
-
-	//Значения по умолчанию для pagingOptions
-	if pagingOptions.Order != "desc" {
-		pagingOptions.Order = "asc"
-	}
-	if pagingOptions.Page <= 0 {
-		pagingOptions.Page = 1
-	}
-	if pagingOptions.PageSize <= 0 {
-		pagingOptions.PageSize = tasksWithPaging.Pagination.TotalItems
-	}
-	if pagingOptions.OrderBy == "" {
-		pagingOptions.OrderBy = "id"
+			int64(math.Ceil(float64(tasksWithPaging.Pagination.TotalItems) /
+				float64(pagingOptions.PageSize)))
 	}
 	tasksWithPaging.Pagination.Options = pagingOptions
-
-	//Добываем выборку с учетом параметров пагинации
-	err = sr.DB.Order(pagingOptions.OrderBy+" "+string(pagingOptions.Order)).
-		Limit(pagingOptions.PageSize).
-		Offset((pagingOptions.Page-1)*pagingOptions.PageSize).
-		Find(&tasksWithPaging.Items).Where("status_id = ?, category_id = ?", taskFilters.StatusId, taskFilters.CategoryId).Error
-
-	return
-}
-
-func (sr *TaskRepository) GetAllForUser(pagingOptions pagination.PagingOptions, taskFilters common.TaskFilters) (tasksWithPaging pagination.Paging[models.Task] /* taskes []models.Task */, err error) {
-	//Собираем данные для ответа в ручке с пагинацией
-	sr.DB.Find(&tasksWithPaging.Items).Where("user_id = ?", taskFilters.UserId)
-	tasksWithPaging.Pagination.TotalItems = len(tasksWithPaging.Items)
-	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
-		tasksWithPaging.Pagination.TotalPages = 1
-	} else { //Подсчитваем количество страниц
-		tasksWithPaging.Pagination.TotalPages =
-			int(math.Ceil(float64(tasksWithPaging.Pagination.TotalItems) / float64(pagingOptions.PageSize)))
-	}
-
-	//Значения по умолчанию для pagingOptions
-	if pagingOptions.Order != "desc" {
-		pagingOptions.Order = "asc"
-	}
-	if pagingOptions.Page <= 0 {
-		pagingOptions.Page = 1
-	}
-	if pagingOptions.PageSize <= 0 {
-		pagingOptions.PageSize = tasksWithPaging.Pagination.TotalItems
-	}
-	if pagingOptions.OrderBy == "" {
-		pagingOptions.OrderBy = "id"
-	}
-	tasksWithPaging.Pagination.Options = pagingOptions
-
-	//Добываем выборку с учетом параметров пагинации
-	err = sr.DB.Order(pagingOptions.OrderBy+" "+string(pagingOptions.Order)).
-		Limit(pagingOptions.PageSize).
-		Offset((pagingOptions.Page-1)*pagingOptions.PageSize).
-		Find(&tasksWithPaging.Items).Where("user_id = ?, status_id = ?, category_id = ?", taskFilters.UserId, taskFilters.StatusId, taskFilters.CategoryId).Error
 
 	return
 }

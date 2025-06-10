@@ -2,6 +2,7 @@ package repos
 
 import (
 	"math"
+	"strings"
 
 	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
@@ -18,36 +19,47 @@ func NewStatusRepository(DB *gorm.DB) StatusRepository {
 }
 
 func (sr *StatusRepository) GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Status] /* statuses []models.Status */, err error) {
-	//Собираем данные для ответа в ручке с пагинацией
-	sr.DB.Find(&statusesWithPaging.Items)
-	statusesWithPaging.Pagination.TotalItems = len(statusesWithPaging.Items)
+	//Сортировка. По умолчанию по возрастанию идентификатора.
+	var orderRule string
+	if pagingOptions.OrderBy == "" {
+		orderRule = "id"
+	} else {
+		var columnCount int64
+		sr.DB.Select("column_name").Table("information_schema.columns").
+			Where("table_name = ? AND column_name = ?", "statuses", pagingOptions.OrderBy).Count(&columnCount)
+		if columnCount == 0 {
+			//Колонка, по которой планировалось сортировать, отсутствует в таблице
+			pagingOptions.OrderBy = ""
+			orderRule = "id"
+		} else {
+			orderRule = pagingOptions.OrderBy
+		}
+	}
+	if strings.ToLower(string(pagingOptions.Order)) == "desc" {
+		orderRule += " desc"
+	}
+	tx := sr.DB.Order(orderRule)
+
+	//Пагинация
+	if pagingOptions.PageSize > 0 {
+		tx = tx.Limit(pagingOptions.PageSize)
+	}
+	if pagingOptions.Page > 0 {
+		tx = tx.Offset((pagingOptions.Page - 1) * pagingOptions.PageSize)
+	}
+
+	err = tx.Find(&statusesWithPaging.Items).Error
+
+	//Собираем выходные данные пагинации
+	sr.DB.Model(&models.Status{}).Count(&statusesWithPaging.Pagination.TotalItems)
 	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
 		statusesWithPaging.Pagination.TotalPages = 1
-	} else { //Подсчитваем количество страниц
+	} else { //Подсчитываем количество страниц
 		statusesWithPaging.Pagination.TotalPages =
-			int(math.Ceil(float64(statusesWithPaging.Pagination.TotalItems) / float64(pagingOptions.PageSize)))
-	}
-
-	//Значения по умолчанию для pagingOptions
-	if pagingOptions.Order != "desc" {
-		pagingOptions.Order = "asc"
-	}
-	if pagingOptions.Page <= 0 {
-		pagingOptions.Page = 1
-	}
-	if pagingOptions.PageSize <= 0 {
-		pagingOptions.PageSize = statusesWithPaging.Pagination.TotalItems
-	}
-	if pagingOptions.OrderBy == "" {
-		pagingOptions.OrderBy = "id"
+			int64(math.Ceil(float64(statusesWithPaging.Pagination.TotalItems) /
+				float64(pagingOptions.PageSize)))
 	}
 	statusesWithPaging.Pagination.Options = pagingOptions
-
-	//Добываем выборку с учетом параметров пагинации
-	err = sr.DB.Order(pagingOptions.OrderBy + " " + string(pagingOptions.Order)).
-		Limit(pagingOptions.PageSize).
-		Offset((pagingOptions.Page - 1) * pagingOptions.PageSize).
-		Find(&statusesWithPaging.Items).Error
 
 	return
 }

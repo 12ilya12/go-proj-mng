@@ -2,16 +2,16 @@ package pagination
 
 //Входные параметры пагинации
 type PagingOptions struct {
-	Page     int    `json:"page" schema:"page"`
-	PageSize int    `json:"page_size" schema:"page_size"`
-	Order    Order  `json:"order" schema:"order"`
-	OrderBy  string `json:"order_by" schema:"order_by"`
+	Page     int    `json:"page,omitempty" schema:"page"`
+	PageSize int    `json:"page_size,omitempty" schema:"page_size"`
+	Order    Order  `json:"order,omitempty" schema:"order"`
+	OrderBy  string `json:"order_by,omitempty" schema:"order_by"`
 }
 
 //Выходные параметры пагинации
 type Pagination struct {
-	TotalItems int           `json:"total_items"`
-	TotalPages int           `json:"total_pages"`
+	TotalItems int64         `json:"total_items"`
+	TotalPages int64         `json:"total_pages"`
 	Options    PagingOptions `json:"options"`
 }
 
