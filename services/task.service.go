@@ -16,12 +16,7 @@ func NewTaskService(taskRepo repos.TaskRepository) TaskService {
 }
 
 func (ss *TaskService) GetAll(pagingOptions pagination.PagingOptions, taskFilters common.TaskFilters) (tasksWithPaging pagination.Paging[models.Task], err error) {
-	if taskFilters.UserInfo.UserRole == "ADMIN" {
-		tasksWithPaging, err = ss.taskRepo.GetAll(pagingOptions, taskFilters)
-	} else {
-		tasksWithPaging, err = ss.taskRepo.GetAllForUser(pagingOptions, taskFilters)
-	}
-
+	tasksWithPaging, err = ss.taskRepo.GetAll(pagingOptions, taskFilters)
 	return
 }
 

@@ -17,9 +17,9 @@ func NewTaskRouteController(taskController controllers.TaskController) TaskRoute
 func (rc *TaskRouteController) TaskRoute(router *mux.Router) {
 	taskRouter := router.PathPrefix("/tasks").Subrouter()
 	taskRouterAdminOnly := router.PathPrefix("/tasks").Subrouter()
-	taskRouter.HandleFunc("/", rc.taskController.GetAll).Methods("GET")
+	taskRouter.HandleFunc("", rc.taskController.GetAll).Methods("GET")
 	taskRouter.HandleFunc("/{id:[0-9]+}", rc.taskController.GetById).Methods("GET")
-	taskRouterAdminOnly.HandleFunc("/", rc.taskController.Create).Methods("POST")
+	taskRouterAdminOnly.HandleFunc("", rc.taskController.Create).Methods("POST")
 	taskRouter.HandleFunc("/{id:[0-9]+}", rc.taskController.Update).Methods("PATCH")
 	taskRouterAdminOnly.HandleFunc("/{id:[0-9]+}", rc.taskController.Delete).Methods("DELETE")
 

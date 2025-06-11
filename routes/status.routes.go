@@ -17,9 +17,9 @@ func NewStatusRouteController(statusController controllers.StatusController) Sta
 func (rc *StatusRouteController) StatusRoute(router *mux.Router) {
 	statusRouter := router.PathPrefix("/statuses").Subrouter()
 	statusRouterAdminOnly := router.PathPrefix("/statuses").Subrouter()
-	statusRouter.HandleFunc("/", rc.statusController.GetAll).Methods("GET")
+	statusRouter.HandleFunc("", rc.statusController.GetAll).Methods("GET")
 	statusRouter.HandleFunc("/{id:[0-9]+}", rc.statusController.GetById).Methods("GET")
-	statusRouterAdminOnly.HandleFunc("/", rc.statusController.Create).Methods("POST")
+	statusRouterAdminOnly.HandleFunc("", rc.statusController.Create).Methods("POST")
 	statusRouterAdminOnly.HandleFunc("/{id:[0-9]+}", rc.statusController.Update).Methods("PATCH")
 	statusRouterAdminOnly.HandleFunc("/{id:[0-9]+}", rc.statusController.Delete).Methods("DELETE")
 
