@@ -59,14 +59,14 @@ func (cc *CategoryController) GetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
-	categoryDto := models.Category{}
-	err := json.NewDecoder(r.Body).Decode(&categoryDto)
+	category := models.Category{}
+	err := json.NewDecoder(r.Body).Decode(&category)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация данных пользователя
-	err = cc.categoryService.Create(&categoryDto)
+	//TODO: Валидация полей категории
+	err = cc.categoryService.Create(&category)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -74,7 +74,7 @@ func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(categoryDto)
+	json.NewEncoder(w).Encode(category)
 }
 
 func (cc *CategoryController) Update(w http.ResponseWriter, r *http.Request) {
@@ -144,8 +144,6 @@ func (cc *CategoryController) Delete(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	//w.Header().Add("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(nil)
 }
 
 func (cc *CategoryController) DeleteForce(w http.ResponseWriter, r *http.Request) {

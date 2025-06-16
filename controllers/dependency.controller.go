@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -24,49 +25,47 @@ func NewDependencyController(dependencyService services.DependencyService) Depen
 }
 
 func (cc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskId, err := strconv.Atoi(vars["taskId"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	var pagingOptions pagination.PagingOptions
 	u.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
 
-	categoriesWithPaging, err := cc.dependencyService.GetAll(pagingOptions)
+	dependenciesWithPaging, err := cc.dependencyService.Get(taskId, pagingOptions)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(categoriesWithPaging)
+	json.NewEncoder(w).Encode(dependenciesWithPaging)
 }
-
-/* func (cc *DependencyController) GetById(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	dependency, err := cc.dependencyService.GetById(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			//Другая проблема с БД
-			http.Error(w, err.Error(), http.StatusBadGateway)
-		}
-		return
-	}
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dependency)
-} */
 
 func (cc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
-	dependencyDto := models.Dependency{}
-	err := json.NewDecoder(r.Body).Decode(&dependencyDto)
+	vars := mux.Vars(r)
+	taskId, err := strconv.Atoi(vars["taskId"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация данных пользователя
-	err = cc.dependencyService.Create(&dependencyDto)
+
+	dependency := models.Dependency{}
+	err = json.NewDecoder(r.Body).Decode(&dependency)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userInfo := common.UserInfo{}
+	userInfo.UserId, _ = strconv.Atoi(fmt.Sprintf("%d", r.Context().Value(common.UserContextKey)))
+	userInfo.UserRole = fmt.Sprintf("%v", r.Context().Value(common.RoleContextKey))
+
+	//TODO: Валидация полей зависимости
+	err = cc.dependencyService.Create(taskId, &dependency, userInfo)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -74,90 +73,27 @@ func (cc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dependencyDto)
+	json.NewEncoder(w).Encode(dependency)
 }
-
-/* func (cc *DependencyController) Update(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	updatedDependency := models.Dependency{}
-	err = json.NewDecoder(r.Body).Decode(&updatedDependency)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	updatedDependency.ID = uint(id)
-	err = cc.dependencyService.Update(&updatedDependency)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			//Другая проблема с БД
-			http.Error(w, err.Error(), http.StatusBadGateway)
-		}
-		return
-	}
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedDependency)
-}
-*/
-/* func (cc *DependencyController) HasTasks(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	hasTasks, err := cc.dependencyService.HasTasks(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			//Другая проблема с БД
-			http.Error(w, err.Error(), http.StatusBadGateway)
-		}
-		return
-	}
-	u.Respond(w, map[string]interface{}{"hasTasks": hasTasks})
-} */
 
 func (cc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	taskId, err := strconv.Atoi(vars["taskId"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = cc.dependencyService.Delete(id)
+	dependencyId, err := strconv.Atoi(vars["dependencyId"])
 	if err != nil {
-		if errors.Is(err, common.ErrDependencyHasRelatedTasks) {
-			http.Error(w, err.Error(), http.StatusConflict)
-		} else if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			//Другая проблема с БД
-			http.Error(w, err.Error(), http.StatusBadGateway)
-		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//w.Header().Add("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(nil)
-}
 
-/* func (cc *DependencyController) DeleteForce(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	err = cc.dependencyService.Delete(taskId, dependencyId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	err = cc.dependencyService.DeleteForce(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		/* if errors.Is(err, common.ErrDependencyHasRelatedTasks) {
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else  */if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			//Другая проблема с БД
@@ -165,4 +101,4 @@ func (cc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-} */
+}

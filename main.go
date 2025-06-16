@@ -29,6 +29,7 @@ func main() {
 	StatusRepo := repos.NewStatusRepository(initializers.DB)
 	CategoryRepo := repos.NewCategoryRepository(initializers.DB)
 	TaskRepo := repos.NewTaskRepository(initializers.DB)
+	DependencyRepo := repos.NewDependencyRepository(initializers.DB)
 
 	//Инициализация сервисов
 	UserService := services.NewUserService(UserRepo)
@@ -36,6 +37,7 @@ func main() {
 	StatusService := services.NewStatusService(StatusRepo)
 	CategoryService := services.NewCategoryService(CategoryRepo)
 	TaskService := services.NewTaskService(TaskRepo)
+	DependencyService := services.NewDependencyService(DependencyRepo, TaskRepo)
 
 	//Инициализация контроллеров
 	AuthController := controllers.NewAuthController(AuthService)
@@ -46,6 +48,8 @@ func main() {
 	CategoryRouteController := routes.NewCategoryRouteController(CategoryController)
 	TaskController := controllers.NewTaskController(TaskService)
 	TaskRouteController := routes.NewTaskRouteController(TaskController)
+	DependencyController := controllers.NewDependencyController(DependencyService)
+	DependencyRouteController := routes.NewDependencyRouteController(DependencyController)
 
 	//Заполнение роутов
 	router := mux.NewRouter()
@@ -53,6 +57,7 @@ func main() {
 	StatusRouteController.StatusRoute(router)
 	CategoryRouteController.CategoryRoute(router)
 	TaskRouteController.TaskRoute(router)
+	DependencyRouteController.DependencyRoute(router)
 
 	//Тестовый роут
 	router.HandleFunc("/alive", func(w http.ResponseWriter, r *http.Request) {

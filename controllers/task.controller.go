@@ -80,7 +80,7 @@ func (sc *TaskController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация данных пользователя
+	//TODO: Валидация полей задачи
 	err = sc.taskService.Create(&task)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
@@ -146,6 +146,4 @@ func (sc *TaskController) Delete(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(nil)
 }

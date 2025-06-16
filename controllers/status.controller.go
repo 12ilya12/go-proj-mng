@@ -65,7 +65,7 @@ func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация данных пользователя
+	//TODO: Валидация полей статуса
 	err = sc.statusService.Create(&status)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
@@ -124,6 +124,4 @@ func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(nil)
 }
