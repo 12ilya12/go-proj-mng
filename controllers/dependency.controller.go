@@ -59,17 +59,26 @@ func (cc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	dependency.ParentTaskId = uint(taskId)
 
 	userInfo := common.UserInfo{}
 	userInfo.UserId, _ = strconv.Atoi(fmt.Sprintf("%d", r.Context().Value(common.UserContextKey)))
 	userInfo.UserRole = fmt.Sprintf("%v", r.Context().Value(common.RoleContextKey))
 
 	//TODO: Валидация полей зависимости
-	err = cc.dependencyService.Create(taskId, &dependency, userInfo)
+	err = cc.dependencyService.Create(&dependency, userInfo)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else if errors.Is(err, common.ErrTaskDepToItself) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else if errors.Is(err, common.ErrDepOnlyBetweenUserTasks) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			//Другая проблема с БД
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -91,9 +100,7 @@ func (cc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = cc.dependencyService.Delete(taskId, dependencyId)
 	if err != nil {
-		/* if errors.Is(err, common.ErrDependencyHasRelatedTasks) {
-			http.Error(w, err.Error(), http.StatusConflict)
-		} else  */if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			//Другая проблема с БД

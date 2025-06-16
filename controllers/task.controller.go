@@ -59,7 +59,7 @@ func (sc *TaskController) GetById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	task, err := sc.taskService.GetById(id)
+	task, err := sc.taskService.GetById(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

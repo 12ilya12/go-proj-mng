@@ -48,10 +48,10 @@ func (sr *DependencyRepository) Get(parentTaskId int, pagingOptions pagination.P
 		tx = tx.Offset((pagingOptions.Page - 1) * pagingOptions.PageSize)
 	}
 
-	err = tx.Find(&dependenciesWithPaging.Items).Error
+	err = tx.Find(&dependenciesWithPaging.Items).Where("parentTaskId = ?", parentTaskId).Error
 
 	//Собираем выходные данные пагинации
-	sr.DB.Model(&models.Dependency{}).Count(&dependenciesWithPaging.Pagination.TotalItems)
+	sr.DB.Model(&models.Dependency{}).Where("parentTaskId = ?", parentTaskId).Count(&dependenciesWithPaging.Pagination.TotalItems)
 	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
 		dependenciesWithPaging.Pagination.TotalPages = 1
 	} else { //Подсчитываем количество страниц
@@ -64,13 +64,18 @@ func (sr *DependencyRepository) Get(parentTaskId int, pagingOptions pagination.P
 	return
 }
 
-func (sr *DependencyRepository) Create(parentTaskId int, dependency *models.Dependency, userInfo common.UserInfo) (err error) {
+func (sr *DependencyRepository) Create(
+	dependency *models.Dependency,
+	userInfo common.UserInfo,
+	parentTaskUserId uint,
+	childTaskUserId uint) (err error) {
+
 	err = sr.DB.Create(&dependency).Error
 	return
 }
 
 func (sr *DependencyRepository) Delete(parentTaskId int, dependencyId int) (err error) {
 
-	err = sr.DB.Delete(&models.Dependency{}, dependencyId).Error
+	err = sr.DB.Delete(&models.Dependency{}, dependencyId, parentTaskId).Error
 	return
 }

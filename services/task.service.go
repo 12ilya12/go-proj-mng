@@ -20,7 +20,7 @@ func (ss *TaskService) GetAll(pagingOptions pagination.PagingOptions, taskFilter
 	return
 }
 
-func (ss *TaskService) GetById(id int) (task models.Task, err error) {
+func (ss *TaskService) GetById(id uint) (task models.Task, err error) {
 	task, err = ss.taskRepo.GetById(id)
 	return
 }

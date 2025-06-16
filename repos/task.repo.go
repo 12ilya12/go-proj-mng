@@ -88,7 +88,7 @@ func (sr *TaskRepository) GetAll(pagingOptions pagination.PagingOptions, taskFil
 	return
 }
 
-func (sr *TaskRepository) GetById(id int) (task models.Task, err error) {
+func (sr *TaskRepository) GetById(id uint) (task models.Task, err error) {
 	err = sr.DB.First(&task, id).Error
 	return
 }
@@ -131,7 +131,7 @@ func (sr *TaskRepository) Update(updatedTask *models.Task, userInfo common.UserI
 		}
 	} else {
 		//Пользователь не администратор, поэтому он может менять только статус СВОЕЙ задачи
-		if task.UserId == uint32(userInfo.UserId) {
+		if task.UserId == uint(userInfo.UserId) {
 			if updatedTask.StatusId != 0 {
 				task.StatusId = updatedTask.StatusId
 			}

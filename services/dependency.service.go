@@ -1,6 +1,8 @@
 package services
 
 import (
+	"strings"
+
 	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
@@ -16,17 +18,38 @@ func NewDependencyService(dependencyRepo repos.DependencyRepository, taskRepo re
 	return DependencyService{dependencyRepo, taskRepo}
 }
 
-func (ss *DependencyService) Get(parentTaskId int, pagingOptions pagination.PagingOptions) (dependenciesWithPaging pagination.Paging[models.Dependency], err error) {
-	dependenciesWithPaging, err = ss.dependencyRepo.Get(parentTaskId, pagingOptions)
+func (ds *DependencyService) Get(parentTaskId int, pagingOptions pagination.PagingOptions) (dependenciesWithPaging pagination.Paging[models.Dependency], err error) {
+	dependenciesWithPaging, err = ds.dependencyRepo.Get(parentTaskId, pagingOptions)
 	return
 }
 
-func (ss *DependencyService) Create(parentTaskId int, dependency *models.Dependency, userInfo common.UserInfo) (err error) {
-	err = ss.dependencyRepo.Create(parentTaskId, dependency, userInfo)
+func (ds *DependencyService) Create(dependency *models.Dependency, userInfo common.UserInfo) (err error) {
+	parentTask, err := ds.taskRepo.GetById(dependency.ParentTaskId)
+	if err != nil {
+		//Родительская задача не найдена
+		return
+	}
+	childTask, err := ds.taskRepo.GetById(dependency.ChildTaskId)
+	if err != nil {
+		//Дочерняя задача не найдена
+		return
+	}
+	if dependency.ParentTaskId == dependency.ChildTaskId {
+		err = common.ErrTaskDepToItself
+		return
+	}
+	//Обычный пользователь может создавать зависимости только между своим задачами
+	if strings.ToLower(userInfo.UserRole) == "user" &&
+		(userInfo.UserId != int(parentTask.UserId) || userInfo.UserId != int(childTask.UserId)) {
+		err = common.ErrDepOnlyBetweenUserTasks
+		return
+	}
+
+	err = ds.dependencyRepo.Create(dependency, userInfo, parentTask.UserId, childTask.UserId)
 	return
 }
 
-func (ss *DependencyService) Delete(parentTaskId int, dependencyId int) (err error) {
-	err = ss.dependencyRepo.Delete(parentTaskId, dependencyId)
+func (ds *DependencyService) Delete(parentTaskId int, dependencyId int) (err error) {
+	err = ds.dependencyRepo.Delete(parentTaskId, dependencyId)
 	return
 }
