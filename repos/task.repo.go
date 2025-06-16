@@ -105,8 +105,41 @@ func (sr *TaskRepository) Update(updatedTask *models.Task, userInfo common.UserI
 		//Не найден статус с заданным идентификатором, либо другая проблема с БД
 		return
 	}
-	//TODO: Обновить ненулевые поля. Если пользователь обычный юзер, то обновить может только статус СВОЕЙ задачи
-	//task.Name = updatedTask.Name
+	//Разные возможности в зависимости от роли пользователя
+	if strings.ToLower(userInfo.UserRole) == "admin" {
+		//Администратор может изменять все поля задачи
+		if updatedTask.Name != "" {
+			task.Name = updatedTask.Name
+		}
+		if updatedTask.Description != "" {
+			task.Description = updatedTask.Description
+		}
+		if updatedTask.StatusId != 0 {
+			task.StatusId = updatedTask.StatusId
+		}
+		if updatedTask.CategoryId != 0 {
+			task.CategoryId = updatedTask.CategoryId
+		}
+		if updatedTask.UserId != 0 {
+			task.UserId = updatedTask.UserId
+		}
+		if !updatedTask.Deadline.IsZero() {
+			task.Deadline = updatedTask.Deadline
+		}
+		if updatedTask.Priority != 0 {
+			task.Priority = updatedTask.Priority
+		}
+	} else {
+		//Пользователь не администратор, поэтому он может менять только статус СВОЕЙ задачи
+		if task.UserId == uint32(userInfo.UserId) {
+			if updatedTask.StatusId != 0 {
+				task.StatusId = updatedTask.StatusId
+			}
+		} else {
+			err = common.ErrUserHasNotPermissionToEditTask
+			return
+		}
+	}
 	err = sr.DB.Save(&task).Error
 	return
 }

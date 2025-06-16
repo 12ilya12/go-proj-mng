@@ -113,7 +113,9 @@ func (sc *TaskController) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = sc.taskService.Update(&updatedTask, userInfo)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, common.ErrUserHasNotPermissionToEditTask) {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
 			//Другая проблема с БД
