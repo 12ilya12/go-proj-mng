@@ -29,13 +29,10 @@ func (sc *TaskController) GetAll(w http.ResponseWriter, r *http.Request) {
 	var pagingOptions pagination.PagingOptions
 	utils.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
 
-	//Считываем параметры фильтрации из body
+	//Считываем необязательные параметры фильтрации из body
 	taskFilters := common.TaskFilters{}
-	err := json.NewDecoder(r.Body).Decode(&taskFilters)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&taskFilters)
+
 	//Дополняем параметры фильтрации информацией о пользователе
 	userInfo := common.UserInfo{}
 	userInfo.UserId, _ = strconv.Atoi(fmt.Sprintf("%d", r.Context().Value(common.UserContextKey)))
