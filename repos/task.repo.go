@@ -60,7 +60,7 @@ func (sr *TaskRepository) GetAll(pagingOptions pagination.PagingOptions, taskFil
 		err = tx.Find(&tasksWithPaging.Items).Error
 	} else {
 		//Обычному пользователю показываем только его задачи
-		err = tx.Find(&tasksWithPaging.Items).Where("user_id = ?", taskFilters.UserId).Error
+		err = tx.Find(&tasksWithPaging.Items, "user_id = ?", taskFilters.UserId).Error
 	}
 
 	//Собираем выходные данные пагинации
@@ -74,7 +74,7 @@ func (sr *TaskRepository) GetAll(pagingOptions pagination.PagingOptions, taskFil
 	if strings.ToLower(taskFilters.UserRole) == "admin" {
 		txForTotalItems.Count(&tasksWithPaging.Pagination.TotalItems)
 	} else {
-		txForTotalItems.Count(&tasksWithPaging.Pagination.TotalItems).Where("user_id = ?", taskFilters.UserId)
+		txForTotalItems.Where("user_id = ?", taskFilters.UserId).Count(&tasksWithPaging.Pagination.TotalItems)
 	}
 	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
 		tasksWithPaging.Pagination.TotalPages = 1
@@ -98,9 +98,9 @@ func (sr *TaskRepository) Create(task *models.Task) (err error) {
 	return
 }
 
-func (sr *TaskRepository) Update(updatedTask *models.Task, userInfo common.UserInfo) (err error) {
-	task := models.Task{}
-	err = sr.DB.First(&task, updatedTask.ID).Error
+func (sr *TaskRepository) Update(paramsForUpdate *models.Task, userInfo common.UserInfo) (updatedTask models.Task, err error) {
+	updatedTask = models.Task{}
+	err = sr.DB.First(&updatedTask, paramsForUpdate.ID).Error
 	if err != nil {
 		//Не найден статус с заданным идентификатором, либо другая проблема с БД
 		return
@@ -108,39 +108,39 @@ func (sr *TaskRepository) Update(updatedTask *models.Task, userInfo common.UserI
 	//Разные возможности в зависимости от роли пользователя
 	if strings.ToLower(userInfo.UserRole) == "admin" {
 		//Администратор может изменять все поля задачи
-		if updatedTask.Name != "" {
-			task.Name = updatedTask.Name
+		if paramsForUpdate.Name != "" {
+			updatedTask.Name = paramsForUpdate.Name
 		}
-		if updatedTask.Description != "" {
-			task.Description = updatedTask.Description
+		if paramsForUpdate.Description != "" {
+			updatedTask.Description = paramsForUpdate.Description
 		}
-		if updatedTask.StatusId != 0 {
-			task.StatusId = updatedTask.StatusId
+		if paramsForUpdate.StatusId != 0 {
+			updatedTask.StatusId = paramsForUpdate.StatusId
 		}
-		if updatedTask.CategoryId != 0 {
-			task.CategoryId = updatedTask.CategoryId
+		if paramsForUpdate.CategoryId != 0 {
+			updatedTask.CategoryId = paramsForUpdate.CategoryId
 		}
-		if updatedTask.UserId != 0 {
-			task.UserId = updatedTask.UserId
+		if paramsForUpdate.UserId != 0 {
+			updatedTask.UserId = paramsForUpdate.UserId
 		}
-		if !updatedTask.Deadline.IsZero() {
-			task.Deadline = updatedTask.Deadline
+		if !paramsForUpdate.Deadline.IsZero() {
+			updatedTask.Deadline = paramsForUpdate.Deadline
 		}
-		if updatedTask.Priority != 0 {
-			task.Priority = updatedTask.Priority
+		if paramsForUpdate.Priority != 0 {
+			updatedTask.Priority = paramsForUpdate.Priority
 		}
 	} else {
 		//Пользователь не администратор, поэтому он может менять только статус СВОЕЙ задачи
-		if task.UserId == uint(userInfo.UserId) {
-			if updatedTask.StatusId != 0 {
-				task.StatusId = updatedTask.StatusId
+		if updatedTask.UserId == uint(userInfo.UserId) {
+			if paramsForUpdate.StatusId != 0 {
+				updatedTask.StatusId = paramsForUpdate.StatusId
 			}
 		} else {
 			err = common.ErrUserHasNotPermissionToEditTask
 			return
 		}
 	}
-	err = sr.DB.Save(&task).Error
+	err = sr.DB.Save(&updatedTask).Error
 	return
 }
 

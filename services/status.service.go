@@ -29,8 +29,8 @@ func (ss *StatusService) Create(status *models.Status) (err error) {
 	return
 }
 
-func (ss *StatusService) Update(status *models.Status) (err error) {
-	err = ss.statusRepo.Update(status)
+func (ss *StatusService) Update(paramsForUpdate *models.Status) (updatedStatus models.Status, err error) {
+	updatedStatus, err = ss.statusRepo.Update(paramsForUpdate)
 	return
 }
 

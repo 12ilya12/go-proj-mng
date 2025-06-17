@@ -96,19 +96,19 @@ func (sc *TaskController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updatedTask := models.Task{}
-	err = json.NewDecoder(r.Body).Decode(&updatedTask)
+	paramsForUpdate := models.Task{}
+	err = json.NewDecoder(r.Body).Decode(&paramsForUpdate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updatedTask.ID = uint(id)
+	paramsForUpdate.ID = uint(id)
 
 	userInfo := common.UserInfo{}
 	userInfo.UserId, _ = strconv.Atoi(fmt.Sprintf("%d", r.Context().Value(common.UserContextKey)))
 	userInfo.UserRole = fmt.Sprintf("%v", r.Context().Value(common.RoleContextKey))
 
-	err = sc.taskService.Update(&updatedTask, userInfo)
+	updatedTask, err := sc.taskService.Update(&paramsForUpdate, userInfo)
 	if err != nil {
 		if errors.Is(err, common.ErrUserHasNotPermissionToEditTask) {
 			http.Error(w, err.Error(), http.StatusForbidden)

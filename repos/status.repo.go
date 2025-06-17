@@ -74,15 +74,15 @@ func (sr *StatusRepository) Create(status *models.Status) (err error) {
 	return
 }
 
-func (sr *StatusRepository) Update(updatedStatus *models.Status) (err error) {
-	status := models.Status{}
-	err = sr.DB.First(&status, updatedStatus.ID).Error
+func (sr *StatusRepository) Update(paramsForUpdate *models.Status) (updatedStatus models.Status, err error) {
+	updatedStatus = models.Status{}
+	err = sr.DB.First(&updatedStatus, paramsForUpdate.ID).Error
 	if err != nil {
 		//Не найден статус с заданным идентификатором, либо другая проблема с БД
 		return
 	}
-	status.Name = updatedStatus.Name
-	err = sr.DB.Save(&status).Error
+	updatedStatus.Name = paramsForUpdate.Name
+	err = sr.DB.Save(&updatedStatus).Error
 	return
 }
 

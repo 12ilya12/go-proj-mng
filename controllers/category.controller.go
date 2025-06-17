@@ -84,14 +84,14 @@ func (cc *CategoryController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updatedCategory := models.Category{}
-	err = json.NewDecoder(r.Body).Decode(&updatedCategory)
+	paramsForUpdate := models.Category{}
+	err = json.NewDecoder(r.Body).Decode(&paramsForUpdate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updatedCategory.ID = uint(id)
-	err = cc.categoryService.Update(&updatedCategory)
+	paramsForUpdate.ID = uint(id)
+	updatedCategory, err := cc.categoryService.Update(&paramsForUpdate)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

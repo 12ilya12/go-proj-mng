@@ -74,15 +74,15 @@ func (sr *CategoryRepository) Create(category *models.Category) (err error) {
 	return
 }
 
-func (sr *CategoryRepository) Update(updatedCategory *models.Category) (err error) {
-	category := models.Category{}
-	err = sr.DB.First(&category, updatedCategory.ID).Error
+func (sr *CategoryRepository) Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error) {
+	updatedCategory = models.Category{}
+	err = sr.DB.First(&updatedCategory, paramsForUpdate.ID).Error
 	if err != nil {
 		//Не найдена категория с заданным идентификатором, либо другая проблема с БД
 		return
 	}
-	category.Name = updatedCategory.Name
-	err = sr.DB.Save(&category).Error
+	updatedCategory.Name = paramsForUpdate.Name
+	err = sr.DB.Save(&updatedCategory).Error
 	return
 }
 

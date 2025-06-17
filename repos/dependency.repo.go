@@ -48,7 +48,7 @@ func (sr *DependencyRepository) Get(parentTaskId uint, pagingOptions pagination.
 		tx = tx.Offset((pagingOptions.Page - 1) * pagingOptions.PageSize)
 	}
 
-	err = tx.Find(&dependenciesWithPaging.Items).Where("parentTaskId = ?", parentTaskId).Error
+	err = tx.Find(&dependenciesWithPaging.Items, "parentTaskId = ?", parentTaskId).Error
 
 	//Собираем выходные данные пагинации
 	sr.DB.Model(&models.Dependency{}).Where("parentTaskId = ?", parentTaskId).Count(&dependenciesWithPaging.Pagination.TotalItems)
@@ -75,7 +75,9 @@ func (sr *DependencyRepository) Create(
 }
 
 func (sr *DependencyRepository) Delete(parentTaskId uint, dependencyId uint) (err error) {
-	//Скорей всего не заработает условие. Проверить!!!
-	err = sr.DB.Delete(&models.Dependency{}, dependencyId, parentTaskId).Error
+	tx := sr.DB.Delete(&models.Dependency{}, "id = ? AND parent_task_id = ?", dependencyId, parentTaskId)
+	if tx.RowsAffected == 0 {
+		err = gorm.ErrRecordNotFound
+	}
 	return
 }

@@ -29,8 +29,8 @@ func (ss *CategoryService) Create(category *models.Category) (err error) {
 	return
 }
 
-func (ss *CategoryService) Update(updatedCategory *models.Category) (err error) {
-	err = ss.categoryRepo.Update(updatedCategory)
+func (ss *CategoryService) Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error) {
+	updatedCategory, err = ss.categoryRepo.Update(paramsForUpdate)
 	return
 }
 

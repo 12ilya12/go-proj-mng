@@ -84,14 +84,14 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updatedStatus := models.Status{}
-	err = json.NewDecoder(r.Body).Decode(&updatedStatus)
+	paramsForUpdate := models.Status{}
+	err = json.NewDecoder(r.Body).Decode(&paramsForUpdate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	updatedStatus.ID = uint(id)
-	err = sc.statusService.Update(&updatedStatus)
+	paramsForUpdate.ID = uint(id)
+	updatedStatus, err := sc.statusService.Update(&paramsForUpdate)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

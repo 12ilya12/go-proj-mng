@@ -54,30 +54,30 @@ func (ts *TaskService) Create(task *models.Task) (err error) {
 	return
 }
 
-func (ts *TaskService) Update(task *models.Task, userInfo common.UserInfo) (err error) {
-	if task.StatusId != 0 {
-		_, err = ts.statusRepo.GetById(task.StatusId)
+func (ts *TaskService) Update(paramsForUpdate *models.Task, userInfo common.UserInfo) (updatedTask models.Task, err error) {
+	if paramsForUpdate.StatusId != 0 {
+		_, err = ts.statusRepo.GetById(paramsForUpdate.StatusId)
 		if err != nil {
 			//Не найден статус, заданный в задаче
 			return
 		}
 	}
-	if task.CategoryId != 0 {
-		_, err = ts.categoryRepo.GetById(task.CategoryId)
+	if paramsForUpdate.CategoryId != 0 {
+		_, err = ts.categoryRepo.GetById(paramsForUpdate.CategoryId)
 		if err != nil {
 			//Не найдена категория, заданная в задаче
 			return
 		}
 	}
-	if task.UserId != 0 {
-		_, err = ts.userRepo.GetById(task.UserId)
+	if paramsForUpdate.UserId != 0 {
+		_, err = ts.userRepo.GetById(paramsForUpdate.UserId)
 		if err != nil {
 			//Не найден пользователь, заданный в задаче
 			return
 		}
 	}
 
-	err = ts.taskRepo.Update(task, userInfo)
+	updatedTask, err = ts.taskRepo.Update(paramsForUpdate, userInfo)
 	return
 }
 
