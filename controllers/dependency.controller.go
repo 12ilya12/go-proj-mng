@@ -35,7 +35,7 @@ func (cc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 	var pagingOptions pagination.PagingOptions
 	u.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
 
-	dependenciesWithPaging, err := cc.dependencyService.Get(taskId, pagingOptions)
+	dependenciesWithPaging, err := cc.dependencyService.Get(uint(taskId), pagingOptions)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -98,7 +98,7 @@ func (cc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = cc.dependencyService.Delete(taskId, dependencyId)
+	err = cc.dependencyService.Delete(uint(taskId), uint(dependencyId))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

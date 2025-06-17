@@ -18,7 +18,7 @@ func NewDependencyService(dependencyRepo repos.DependencyRepository, taskRepo re
 	return DependencyService{dependencyRepo, taskRepo}
 }
 
-func (ds *DependencyService) Get(parentTaskId int, pagingOptions pagination.PagingOptions) (dependenciesWithPaging pagination.Paging[models.Dependency], err error) {
+func (ds *DependencyService) Get(parentTaskId uint, pagingOptions pagination.PagingOptions) (dependenciesWithPaging pagination.Paging[models.Dependency], err error) {
 	dependenciesWithPaging, err = ds.dependencyRepo.Get(parentTaskId, pagingOptions)
 	return
 }
@@ -49,7 +49,7 @@ func (ds *DependencyService) Create(dependency *models.Dependency, userInfo comm
 	return
 }
 
-func (ds *DependencyService) Delete(parentTaskId int, dependencyId int) (err error) {
+func (ds *DependencyService) Delete(parentTaskId uint, dependencyId uint) (err error) {
 	err = ds.dependencyRepo.Delete(parentTaskId, dependencyId)
 	return
 }

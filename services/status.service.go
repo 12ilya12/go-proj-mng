@@ -19,7 +19,7 @@ func (ss *StatusService) GetAll(pagingOptions pagination.PagingOptions) (statuse
 	return
 }
 
-func (ss *StatusService) GetById(id int) (status models.Status, err error) {
+func (ss *StatusService) GetById(id uint) (status models.Status, err error) {
 	status, err = ss.statusRepo.GetById(id)
 	return
 }
@@ -34,7 +34,7 @@ func (ss *StatusService) Update(status *models.Status) (err error) {
 	return
 }
 
-func (ss *StatusService) Delete(id int) (err error) {
+func (ss *StatusService) Delete(id uint) (err error) {
 	err = ss.statusRepo.Delete(id)
 	return
 }

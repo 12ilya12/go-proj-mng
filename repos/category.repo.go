@@ -64,7 +64,7 @@ func (sr *CategoryRepository) GetAll(pagingOptions pagination.PagingOptions) (ca
 	return
 }
 
-func (sr *CategoryRepository) GetById(id int) (category models.Category, err error) {
+func (sr *CategoryRepository) GetById(id uint) (category models.Category, err error) {
 	err = sr.DB.First(&category, id).Error
 	return
 }
@@ -86,7 +86,7 @@ func (sr *CategoryRepository) Update(updatedCategory *models.Category) (err erro
 	return
 }
 
-func (sr *CategoryRepository) HasTasks(id int) (hasTasks bool, err error) {
+func (sr *CategoryRepository) HasTasks(id uint) (hasTasks bool, err error) {
 	//Проверка наличия категории с заданным идентификатором
 	err = sr.DB.First(&models.Category{}, id).Error
 	if err != nil {
@@ -94,13 +94,13 @@ func (sr *CategoryRepository) HasTasks(id int) (hasTasks bool, err error) {
 		return
 	}
 
-	tasksWithCategoryCount := int64(0)
+	var tasksWithCategoryCount int64
 	sr.DB.Table("tasks").Where("category_id = ?", id).Count(&tasksWithCategoryCount)
 	hasTasks = tasksWithCategoryCount > 0
 	return
 }
 
-func (sr *CategoryRepository) Delete(id int) (err error) {
+func (sr *CategoryRepository) Delete(id uint) (err error) {
 	hasTasks, err := sr.HasTasks(id)
 	if err != nil {
 		return
@@ -115,7 +115,7 @@ func (sr *CategoryRepository) Delete(id int) (err error) {
 	return
 }
 
-func (sr *CategoryRepository) DeleteForce(id int) (err error) {
+func (sr *CategoryRepository) DeleteForce(id uint) (err error) {
 	//Проверка наличия категории с заданным идентификатором
 	category := models.Category{}
 	err = sr.DB.First(&category, id).Error

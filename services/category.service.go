@@ -19,7 +19,7 @@ func (ss *CategoryService) GetAll(pagingOptions pagination.PagingOptions) (categ
 	return
 }
 
-func (ss *CategoryService) GetById(id int) (category models.Category, err error) {
+func (ss *CategoryService) GetById(id uint) (category models.Category, err error) {
 	category, err = ss.categoryRepo.GetById(id)
 	return
 }
@@ -34,17 +34,17 @@ func (ss *CategoryService) Update(updatedCategory *models.Category) (err error) 
 	return
 }
 
-func (ss *CategoryService) HasTasks(id int) (hasTasks bool, err error) {
+func (ss *CategoryService) HasTasks(id uint) (hasTasks bool, err error) {
 	hasTasks, err = ss.categoryRepo.HasTasks(id)
 	return
 }
 
-func (ss *CategoryService) Delete(id int) (err error) {
+func (ss *CategoryService) Delete(id uint) (err error) {
 	err = ss.categoryRepo.Delete(id)
 	return
 }
 
-func (ss *CategoryService) DeleteForce(id int) (err error) {
+func (ss *CategoryService) DeleteForce(id uint) (err error) {
 	err = ss.categoryRepo.DeleteForce(id)
 	return
 }

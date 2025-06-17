@@ -36,7 +36,7 @@ func main() {
 	AuthService := services.NewAuthService(UserService)
 	StatusService := services.NewStatusService(StatusRepo)
 	CategoryService := services.NewCategoryService(CategoryRepo)
-	TaskService := services.NewTaskService(TaskRepo)
+	TaskService := services.NewTaskService(TaskRepo, StatusRepo, CategoryRepo, UserRepo)
 	DependencyService := services.NewDependencyService(DependencyRepo, TaskRepo)
 
 	//Инициализация контроллеров

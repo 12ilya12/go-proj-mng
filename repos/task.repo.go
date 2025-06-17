@@ -144,13 +144,13 @@ func (sr *TaskRepository) Update(updatedTask *models.Task, userInfo common.UserI
 	return
 }
 
-func (sr *TaskRepository) hasTasks(taskId int) bool {
+func (sr *TaskRepository) hasTasks(taskId uint) bool {
 	tasksWithTaskCount := int64(0)
 	sr.DB.Table("tasks").Where("task_id = ?", taskId).Count(&tasksWithTaskCount)
 	return tasksWithTaskCount > 0
 }
 
-func (sr *TaskRepository) Delete(id int) (err error) {
+func (sr *TaskRepository) Delete(id uint) (err error) {
 	err = sr.DB.First(&models.Task{}, id).Error
 	if err != nil {
 		//Не найден статус с заданным идентификатором, либо другая проблема с БД

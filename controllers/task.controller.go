@@ -134,7 +134,7 @@ func (sc *TaskController) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = sc.taskService.Delete(id)
+	err = sc.taskService.Delete(uint(id))
 	if err != nil {
 		if errors.Is(err, common.ErrTaskHasRelatedDependency) {
 			http.Error(w, err.Error(), http.StatusConflict)

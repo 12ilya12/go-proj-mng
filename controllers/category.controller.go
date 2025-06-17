@@ -44,7 +44,7 @@ func (cc *CategoryController) GetById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	category, err := cc.categoryService.GetById(id)
+	category, err := cc.categoryService.GetById(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -112,7 +112,7 @@ func (cc *CategoryController) HasTasks(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	hasTasks, err := cc.categoryService.HasTasks(id)
+	hasTasks, err := cc.categoryService.HasTasks(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -132,7 +132,7 @@ func (cc *CategoryController) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = cc.categoryService.Delete(id)
+	err = cc.categoryService.Delete(uint(id))
 	if err != nil {
 		if errors.Is(err, common.ErrCategoryHasRelatedTasks) {
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -153,7 +153,7 @@ func (cc *CategoryController) DeleteForce(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = cc.categoryService.DeleteForce(id)
+	err = cc.categoryService.DeleteForce(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

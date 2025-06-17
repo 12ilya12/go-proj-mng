@@ -18,7 +18,7 @@ func NewDependencyRepository(DB *gorm.DB) DependencyRepository {
 	return DependencyRepository{DB}
 }
 
-func (sr *DependencyRepository) Get(parentTaskId int, pagingOptions pagination.PagingOptions) (dependenciesWithPaging pagination.Paging[models.Dependency], err error) {
+func (sr *DependencyRepository) Get(parentTaskId uint, pagingOptions pagination.PagingOptions) (dependenciesWithPaging pagination.Paging[models.Dependency], err error) {
 	//Сортировка. По умолчанию по возрастанию идентификатора.
 	var orderRule string
 	if pagingOptions.OrderBy == "" {
@@ -74,8 +74,8 @@ func (sr *DependencyRepository) Create(
 	return
 }
 
-func (sr *DependencyRepository) Delete(parentTaskId int, dependencyId int) (err error) {
-
+func (sr *DependencyRepository) Delete(parentTaskId uint, dependencyId uint) (err error) {
+	//Скорей всего не заработает условие. Проверить!!!
 	err = sr.DB.Delete(&models.Dependency{}, dependencyId, parentTaskId).Error
 	return
 }

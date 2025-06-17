@@ -44,7 +44,7 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	status, err := sc.statusService.GetById(id)
+	status, err := sc.statusService.GetById(uint(id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -112,7 +112,7 @@ func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = sc.statusService.Delete(id)
+	err = sc.statusService.Delete(uint(id))
 	if err != nil {
 		if errors.Is(err, common.ErrStatusHasRelatedTasks) {
 			http.Error(w, err.Error(), http.StatusConflict)
