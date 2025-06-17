@@ -48,10 +48,10 @@ func (sr *DependencyRepository) Get(parentTaskId uint, pagingOptions pagination.
 		tx = tx.Offset((pagingOptions.Page - 1) * pagingOptions.PageSize)
 	}
 
-	err = tx.Find(&dependenciesWithPaging.Items, "parentTaskId = ?", parentTaskId).Error
+	err = tx.Find(&dependenciesWithPaging.Items, "parent_task_id = ?", parentTaskId).Error
 
 	//Собираем выходные данные пагинации
-	sr.DB.Model(&models.Dependency{}).Where("parentTaskId = ?", parentTaskId).Count(&dependenciesWithPaging.Pagination.TotalItems)
+	sr.DB.Model(&models.Dependency{}).Where("parent_task_id = ?", parentTaskId).Count(&dependenciesWithPaging.Pagination.TotalItems)
 	if pagingOptions.PageSize == 0 { //Если размер страницы не задан, показываем всё на одной странице
 		dependenciesWithPaging.Pagination.TotalPages = 1
 	} else { //Подсчитываем количество страниц
