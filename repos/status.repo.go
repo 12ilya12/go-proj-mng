@@ -4,7 +4,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"gorm.io/gorm"
@@ -86,24 +85,13 @@ func (sr *StatusRepository) Update(paramsForUpdate *models.Status) (updatedStatu
 	return
 }
 
-func (sr *StatusRepository) hasTasks(statusId uint) bool {
+func (sr *StatusRepository) HasTasks(statusId uint) bool {
 	var tasksWithStatusCount int64
 	sr.DB.Table("tasks").Where("status_id = ?", statusId).Count(&tasksWithStatusCount)
 	return tasksWithStatusCount > 0
 }
 
 func (sr *StatusRepository) Delete(id uint) (err error) {
-	err = sr.DB.First(&models.Status{}, id).Error
-	if err != nil {
-		//Не найден статус с заданным идентификатором, либо другая проблема с БД
-		return
-	}
-
-	if sr.hasTasks(id) {
-		err = common.ErrStatusHasRelatedTasks
-		return
-	}
-
 	err = sr.DB.Delete(&models.Status{}, id).Error
 	return
 }

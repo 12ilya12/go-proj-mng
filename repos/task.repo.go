@@ -98,70 +98,18 @@ func (sr *TaskRepository) Create(task *models.Task) (err error) {
 	return
 }
 
-func (sr *TaskRepository) Update(paramsForUpdate *models.Task, userInfo common.UserInfo) (updatedTask models.Task, err error) {
-	updatedTask = models.Task{}
-	err = sr.DB.First(&updatedTask, paramsForUpdate.ID).Error
-	if err != nil {
-		//Не найден статус с заданным идентификатором, либо другая проблема с БД
-		return
-	}
-	//Разные возможности в зависимости от роли пользователя
-	if strings.ToLower(userInfo.UserRole) == "admin" {
-		//Администратор может изменять все поля задачи
-		if paramsForUpdate.Name != "" {
-			updatedTask.Name = paramsForUpdate.Name
-		}
-		if paramsForUpdate.Description != "" {
-			updatedTask.Description = paramsForUpdate.Description
-		}
-		if paramsForUpdate.StatusId != 0 {
-			updatedTask.StatusId = paramsForUpdate.StatusId
-		}
-		if paramsForUpdate.CategoryId != 0 {
-			updatedTask.CategoryId = paramsForUpdate.CategoryId
-		}
-		if paramsForUpdate.UserId != 0 {
-			updatedTask.UserId = paramsForUpdate.UserId
-		}
-		if !paramsForUpdate.Deadline.IsZero() {
-			updatedTask.Deadline = paramsForUpdate.Deadline
-		}
-		if paramsForUpdate.Priority != 0 {
-			updatedTask.Priority = paramsForUpdate.Priority
-		}
-	} else {
-		//Пользователь не администратор, поэтому он может менять только статус СВОЕЙ задачи
-		if updatedTask.UserId == uint(userInfo.UserId) {
-			if paramsForUpdate.StatusId != 0 {
-				updatedTask.StatusId = paramsForUpdate.StatusId
-			}
-		} else {
-			err = common.ErrUserHasNotPermissionToEditTask
-			return
-		}
-	}
+func (sr *TaskRepository) Update(updatedTask *models.Task) (err error) {
 	err = sr.DB.Save(&updatedTask).Error
 	return
 }
 
-func (sr *TaskRepository) hasDependencies(taskId uint) bool {
+func (sr *TaskRepository) HasDependencies(taskId uint) bool {
 	var depsWithTaskCount int64
 	sr.DB.Table("dependencies").Where("parent_task_id = ? OR child_task_id = ?", taskId, taskId).Count(&depsWithTaskCount)
 	return depsWithTaskCount > 0
 }
 
 func (sr *TaskRepository) Delete(id uint) (err error) {
-	err = sr.DB.First(&models.Task{}, id).Error
-	if err != nil {
-		//Не найден статус с заданным идентификатором, либо другая проблема с БД
-		return
-	}
-
-	if sr.hasDependencies(id) {
-		err = common.ErrTaskHasRelatedDependency
-		return
-	}
-
 	err = sr.DB.Delete(&models.Task{}, id).Error
 	return
 }

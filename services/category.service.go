@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/repos"
@@ -40,11 +41,20 @@ func (ss *CategoryService) HasTasks(id uint) (hasTasks bool, err error) {
 }
 
 func (ss *CategoryService) Delete(id uint) (err error) {
+	hasTasks, err := ss.HasTasks(id)
+	if err != nil {
+		return
+	}
+
+	if hasTasks { //Если удаляемая категория имеет связи с задачами, возвращаем ошибку и удаление не производим
+		err = common.ErrCategoryHasRelatedTasks
+		return
+	}
 	err = ss.categoryRepo.Delete(id)
 	return
 }
 
 func (ss *CategoryService) DeleteForce(id uint) (err error) {
-	err = ss.categoryRepo.DeleteForce(id)
+	err = ss.categoryRepo.Delete(id)
 	return
 }

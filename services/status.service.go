@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/repos"
@@ -35,6 +36,16 @@ func (ss *StatusService) Update(paramsForUpdate *models.Status) (updatedStatus m
 }
 
 func (ss *StatusService) Delete(id uint) (err error) {
+	_, err = ss.GetById(id)
+	if err != nil {
+		//Не найден статус с заданным идентификатором, либо другая проблема с БД
+		return
+	}
+
+	if ss.statusRepo.HasTasks(id) {
+		err = common.ErrStatusHasRelatedTasks
+		return
+	}
 	err = ss.statusRepo.Delete(id)
 	return
 }

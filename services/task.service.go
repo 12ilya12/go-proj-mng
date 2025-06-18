@@ -1,6 +1,8 @@
 package services
 
 import (
+	"strings"
+
 	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
@@ -77,11 +79,62 @@ func (ts *TaskService) Update(paramsForUpdate *models.Task, userInfo common.User
 		}
 	}
 
-	updatedTask, err = ts.taskRepo.Update(paramsForUpdate, userInfo)
+	updatedTask, err = ts.GetById(paramsForUpdate.ID)
+	if err != nil {
+		//Не найден статус с заданным идентификатором, либо другая проблема с БД
+		return
+	}
+	//Разные возможности в зависимости от роли пользователя
+	if strings.ToLower(userInfo.UserRole) == "admin" {
+		//Администратор может изменять все поля задачи
+		if paramsForUpdate.Name != "" {
+			updatedTask.Name = paramsForUpdate.Name
+		}
+		if paramsForUpdate.Description != "" {
+			updatedTask.Description = paramsForUpdate.Description
+		}
+		if paramsForUpdate.StatusId != 0 {
+			updatedTask.StatusId = paramsForUpdate.StatusId
+		}
+		if paramsForUpdate.CategoryId != 0 {
+			updatedTask.CategoryId = paramsForUpdate.CategoryId
+		}
+		if paramsForUpdate.UserId != 0 {
+			updatedTask.UserId = paramsForUpdate.UserId
+		}
+		if !paramsForUpdate.Deadline.IsZero() {
+			updatedTask.Deadline = paramsForUpdate.Deadline
+		}
+		if paramsForUpdate.Priority != 0 {
+			updatedTask.Priority = paramsForUpdate.Priority
+		}
+	} else {
+		//Пользователь не администратор, поэтому он может менять только статус СВОЕЙ задачи
+		if updatedTask.UserId == uint(userInfo.UserId) {
+			if paramsForUpdate.StatusId != 0 {
+				updatedTask.StatusId = paramsForUpdate.StatusId
+			}
+		} else {
+			err = common.ErrUserHasNotPermissionToEditTask
+			return
+		}
+	}
+
+	err = ts.taskRepo.Update(&updatedTask)
 	return
 }
 
 func (ts *TaskService) Delete(id uint) (err error) {
+	_, err = ts.GetById(id)
+	if err != nil {
+		//Не найден статус с заданным идентификатором, либо другая проблема с БД
+		return
+	}
+
+	if ts.taskRepo.HasDependencies(id) {
+		err = common.ErrTaskHasRelatedDependency
+		return
+	}
 	err = ts.taskRepo.Delete(id)
 	return
 }
