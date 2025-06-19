@@ -7,7 +7,7 @@ import (
 
 type Category struct {
 	ID   uint   `gorm:"primary_key" json:"id"`
-	Name string `gorm:"type:varchar(255);not null;" json:"name"`
+	Name string `gorm:"type:varchar(255);not null;" json:"name" validate:""`
 }
 
 // Хук для каскадного удаления задач, связанных с категорией

@@ -11,16 +11,19 @@ import (
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/services"
 	"github.com/12ilya12/go-proj-mng/utils"
+	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 type StatusController struct {
 	statusService services.StatusService
+	vld           *validator.Validate
 }
 
 func NewStatusController(statusService services.StatusService) StatusController {
-	return StatusController{statusService}
+	vld := validator.New()
+	return StatusController{statusService, vld}
 }
 
 func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +32,6 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	statusesWithPaging, err := sc.statusService.GetAll(pagingOptions)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -65,10 +67,18 @@ func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация полей статуса
+
+	err = sc.vld.Struct(status)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	err = sc.statusService.Create(&status)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -91,6 +101,16 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	paramsForUpdate.ID = uint(id)
+
+	err = sc.vld.Struct(paramsForUpdate)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	updatedStatus, err := sc.statusService.Update(&paramsForUpdate)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

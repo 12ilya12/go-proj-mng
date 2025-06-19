@@ -6,11 +6,11 @@ import (
 
 type User struct {
 	ID       uint   `gorm:"primary_key" json:"id"`
-	Login    string `gorm:"type:varchar(255);not null;" json:"login"`
-	Password string `gorm:"not null;" json:"password,omitempty"`
+	Login    string `gorm:"type:varchar(255);not null;" json:"login" validator:"required"`
+	Password string `gorm:"not null;" json:"password,omitempty" validator:"required"`
 	FullName string `gorm:"type:varchar(255);not null;" json:"fullname"`
-	Email    string `gorm:"type:varchar(255);not null;" json:"email"`
-	Role     string `gorm:"type:varchar(255);not null;" json:"role"`
+	Email    string `gorm:"type:varchar(255);not null;" json:"email" validator:"email"`
+	Role     string `gorm:"type:varchar(255);not null;" json:"role" validator:"oneof=admin user"`
 }
 
 /*

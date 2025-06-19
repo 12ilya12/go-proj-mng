@@ -12,19 +12,22 @@ import (
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/services"
 	u "github.com/12ilya12/go-proj-mng/utils"
+	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 type DependencyController struct {
 	dependencyService services.DependencyService
+	vld               *validator.Validate
 }
 
 func NewDependencyController(dependencyService services.DependencyService) DependencyController {
-	return DependencyController{dependencyService}
+	vld := validator.New()
+	return DependencyController{dependencyService, vld}
 }
 
-func (cc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
+func (dc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskId, err := strconv.Atoi(vars["taskId"])
 	if err != nil {
@@ -35,7 +38,7 @@ func (cc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 	var pagingOptions pagination.PagingOptions
 	u.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
 
-	dependenciesWithPaging, err := cc.dependencyService.Get(uint(taskId), pagingOptions)
+	dependenciesWithPaging, err := dc.dependencyService.Get(uint(taskId), pagingOptions)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -45,7 +48,7 @@ func (cc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dependenciesWithPaging)
 }
 
-func (cc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
+func (dc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskId, err := strconv.Atoi(vars["taskId"])
 	if err != nil {
@@ -65,8 +68,16 @@ func (cc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 	userInfo.UserId, _ = strconv.Atoi(fmt.Sprintf("%d", r.Context().Value(common.UserContextKey)))
 	userInfo.UserRole = fmt.Sprintf("%v", r.Context().Value(common.RoleContextKey))
 
-	//TODO: Валидация полей зависимости
-	err = cc.dependencyService.Create(&dependency, userInfo)
+	err = dc.vld.Struct(dependency)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	err = dc.dependencyService.Create(&dependency, userInfo)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -85,7 +96,7 @@ func (cc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dependency)
 }
 
-func (cc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
+func (dc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskId, err := strconv.Atoi(vars["taskId"])
 	if err != nil {
@@ -98,7 +109,7 @@ func (cc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = cc.dependencyService.Delete(uint(taskId), uint(dependencyId))
+	err = dc.dependencyService.Delete(uint(taskId), uint(dependencyId))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

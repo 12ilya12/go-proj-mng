@@ -2,19 +2,23 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/services"
 	u "github.com/12ilya12/go-proj-mng/utils"
+	"github.com/go-playground/validator"
 )
 
 type AuthController struct {
 	authService services.AuthService
+	vld         *validator.Validate
 }
 
 func NewAuthController(authService services.AuthService) AuthController {
-	return AuthController{authService}
+	vld := validator.New()
+	return AuthController{authService, vld}
 }
 
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
@@ -25,10 +29,18 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация данных пользователя
+
+	err = ac.vld.Struct(userDto)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	err = ac.authService.Register(&userDto)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -42,6 +54,15 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	err = ac.vld.Struct(userDto)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	token, err := ac.authService.Login(userDto.Login, userDto.Password)

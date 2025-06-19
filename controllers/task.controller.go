@@ -12,16 +12,19 @@ import (
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/services"
 	"github.com/12ilya12/go-proj-mng/utils"
+	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 type TaskController struct {
 	taskService services.TaskService
+	vld         *validator.Validate
 }
 
 func NewTaskController(taskService services.TaskService) TaskController {
-	return TaskController{taskService}
+	vld := validator.New()
+	return TaskController{taskService, vld}
 }
 
 func (sc *TaskController) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +44,6 @@ func (sc *TaskController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	tasksWithPaging, err := sc.taskService.GetAll(pagingOptions, taskFilters)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -77,10 +79,18 @@ func (sc *TaskController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация полей задачи
+
+	err = sc.vld.Struct(task)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	err = sc.taskService.Create(&task)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}

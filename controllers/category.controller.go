@@ -11,16 +11,19 @@ import (
 	"github.com/12ilya12/go-proj-mng/pagination"
 	"github.com/12ilya12/go-proj-mng/services"
 	u "github.com/12ilya12/go-proj-mng/utils"
+	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 type CategoryController struct {
 	categoryService services.CategoryService
+	vld             *validator.Validate
 }
 
 func NewCategoryController(categoryService services.CategoryService) CategoryController {
-	return CategoryController{categoryService}
+	vld := validator.New()
+	return CategoryController{categoryService, vld}
 }
 
 func (cc *CategoryController) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +32,6 @@ func (cc *CategoryController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	categoriesWithPaging, err := cc.categoryService.GetAll(pagingOptions)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
@@ -65,7 +67,16 @@ func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//TODO: Валидация полей категории
+
+	err = cc.vld.Struct(category)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	err = cc.categoryService.Create(&category)
 	if err != nil {
 		//TODO: Проверить какие ошибки может выдать gorm
@@ -91,6 +102,16 @@ func (cc *CategoryController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	paramsForUpdate.ID = uint(id)
+
+	err = cc.vld.Struct(paramsForUpdate)
+	if err != nil {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	updatedCategory, err := cc.categoryService.Update(&paramsForUpdate)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
