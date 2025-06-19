@@ -1,0 +1,30 @@
+definitions:
+  models.Status:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /statuses/{id}:
+    get:
+      description: получить статус по идентификатору
+      operationId: get-status
+      parameters:
+      - description: Идентификатор статуса
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Status'
+      summary: Получить статус по идентификатору
+swagger: "2.0"

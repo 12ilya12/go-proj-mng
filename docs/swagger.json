@@ -1,0 +1,48 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/statuses/{id}": {
+            "get": {
+                "description": "получить статус по идентификатору",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Получить статус по идентификатору",
+                "operationId": "get-status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор статуса",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Status"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Status": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

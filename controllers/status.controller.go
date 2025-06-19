@@ -39,6 +39,14 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(statusesWithPaging)
 }
 
+// GetById возвращает статус по идентификатору
+// @Summary Получить статус по идентификатору
+// @Description получить статус по идентификатору
+// @ID get-status
+// @Produce  json
+// @Param id path int true "Идентификатор статуса"
+// @Success 200 {object} models.Status
+// @Router /statuses/{id} [get]
 func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

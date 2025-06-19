@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	"github.com/12ilya12/go-proj-mng/controllers"
+	_ "github.com/12ilya12/go-proj-mng/docs"
 	"github.com/12ilya12/go-proj-mng/initializers"
-	"github.com/12ilya12/go-proj-mng/middlewares"
 	"github.com/12ilya12/go-proj-mng/repos"
 	"github.com/12ilya12/go-proj-mng/routes"
 	"github.com/12ilya12/go-proj-mng/services"
 	u "github.com/12ilya12/go-proj-mng/utils"
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -64,8 +65,11 @@ func main() {
 		u.Respond(w, u.Message("Жив, цел, Орёл!"))
 	}).Methods("GET")
 
+	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
 	//Подключаем мидлвар для аутентификации по JWT
-	router.Use(middlewares.JwtAuthentication)
+	//TODO: Раскомментировать после корректной реализации исключений аутентификации
+	//router.Use(middlewares.JwtAuthentication)
 
 	if config.ServerPort == "" {
 		config.ServerPort = "8000"
