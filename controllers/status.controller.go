@@ -39,9 +39,9 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(statusesWithPaging)
 }
 
-// GetById возвращает статус по идентификатору
-// @Summary Получить статус по идентификатору
-// @Description получить статус по идентификатору
+// GetById возвращает статус задачи по идентификатору
+// @Summary Получить статус задачи по идентификатору
+// @Description получить статус задачи по идентификатору
 // @ID get-status
 // @Produce  json
 // @Param id path int true "Идентификатор статуса"

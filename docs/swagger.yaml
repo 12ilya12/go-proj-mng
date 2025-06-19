@@ -11,7 +11,7 @@ info:
 paths:
   /statuses/{id}:
     get:
-      description: получить статус по идентификатору
+      description: получить статус задачи по идентификатору
       operationId: get-status
       parameters:
       - description: Идентификатор статуса
@@ -26,5 +26,5 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Status'
-      summary: Получить статус по идентификатору
+      summary: Получить статус задачи по идентификатору
 swagger: "2.0"

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/12ilya12/go-proj-mng/common"
@@ -17,20 +18,21 @@ func JwtAuthentication(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//Список эндпоинтов, не требующих аутентификации
-		notAuth := []string{"/auth/login", "/auth/register", "/alive", "/swagger/index.html"}
+		notAuth := []string{"/auth/login", "/auth/register", "/alive", "/doc"}
 		//Путь запроса
 		requestPath := r.URL.Path
 
 		//Пропускаем аутентификацию, если эндпоинт в белом списке
 		for _, value := range notAuth {
 
-			if value == requestPath {
+			//if value == requestPath {
+			if matched, _ := regexp.Match("(^"+value+")", []byte(requestPath)); matched {
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
 
-		response := make(map[string]interface{})
+		var response map[string]interface{}
 		//Извлекаем токен из запроса
 		tokenHeader := r.Header.Get("Authorization")
 

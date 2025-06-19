@@ -17,11 +17,11 @@ const docTemplate = `{
     "paths": {
         "/statuses/{id}": {
             "get": {
-                "description": "получить статус по идентификатору",
+                "description": "получить статус задачи по идентификатору",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Получить статус по идентификатору",
+                "summary": "Получить статус задачи по идентификатору",
                 "operationId": "get-status",
                 "parameters": [
                     {
