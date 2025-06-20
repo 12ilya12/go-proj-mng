@@ -6,12 +6,136 @@ definitions:
       name:
         type: string
     type: object
+  pagination.Order:
+    enum:
+    - asc
+    - desc
+    type: string
+    x-enum-varnames:
+    - Asc
+    - Desc
+  pagination.Pagination:
+    properties:
+      options:
+        $ref: '#/definitions/pagination.PagingOptions'
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  pagination.Paging-models_Status:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.Status'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+    type: object
+  pagination.PagingOptions:
+    properties:
+      order:
+        $ref: '#/definitions/pagination.Order'
+      order_by:
+        type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
-  /statuses/{id}:
+  /statuses:
     get:
-      description: получить статус задачи по идентификатору
+      description: Позволяет получить список всех статусов. Доступно всем пользователям.
+      operationId: get-all-statuses
+      parameters:
+      - description: Номер страницы
+        in: query
+        name: Page
+        type: integer
+      - description: Размер страницы
+        in: query
+        name: PageSize
+        type: integer
+      - description: По возрастанию/по убыванию
+        enum:
+        - asc
+        - desc
+        in: query
+        name: Order
+        type: string
+      - description: Характеристика для сортировки
+        in: query
+        name: OrderBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Paging-models_Status'
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить все статусы
+    post:
+      description: Позволяет создать новый статус. Доступно только для администраторов.
+      operationId: create-status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Status'
+        "400":
+          description: Параметры нового статуса некорректны
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Создать статус
+  /statuses/{id}:
+    delete:
+      description: Позволяет удалить статус. Доступно только для администраторов.
+      operationId: delete-status
+      parameters:
+      - description: Идентификатор статуса
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Статус с заданным идентификатором не найден
+          schema:
+            type: string
+        "409":
+          description: С удаляемым статусом есть связанные задачи
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Удалить статус
+    get:
+      description: Позволяет получить статус по его идентификатору. Доступно всем
+        пользователям.
       operationId: get-status
       parameters:
       - description: Идентификатор статуса
@@ -26,5 +150,46 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Status'
-      summary: Получить статус задачи по идентификатору
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Статус с заданным идентификатором не найден
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить статус по идентификатору
+    patch:
+      description: Позволяет обновить данные статуса. Доступно только для администраторов.
+      operationId: update-status
+      parameters:
+      - description: Идентификатор статуса
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Status'
+        "400":
+          description: Параметры статуса некорректны
+          schema:
+            type: string
+        "404":
+          description: Статус с заданным идентификатором не найден
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Обновить статус
 swagger: "2.0"

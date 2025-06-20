@@ -4,13 +4,95 @@
         "contact": {}
     },
     "paths": {
-        "/statuses/{id}": {
+        "/statuses": {
             "get": {
-                "description": "получить статус задачи по идентификатору",
+                "description": "Позволяет получить список всех статусов. Доступно всем пользователям.",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Получить статус задачи по идентификатору",
+                "summary": "Получить все статусы",
+                "operationId": "get-all-statuses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Номер страницы",
+                        "name": "Page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Размер страницы",
+                        "name": "PageSize",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "По возрастанию/по убыванию",
+                        "name": "Order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Характеристика для сортировки",
+                        "name": "OrderBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/pagination.Paging-models_Status"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Позволяет создать новый статус. Доступно только для администраторов.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Создать статус",
+                "operationId": "create-status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Status"
+                        }
+                    },
+                    "400": {
+                        "description": "Параметры нового статуса некорректны",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/statuses/{id}": {
+            "get": {
+                "description": "Позволяет получить статус по его идентификатору. Доступно всем пользователям.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Получить статус по идентификатору",
                 "operationId": "get-status",
                 "parameters": [
                     {
@@ -27,6 +109,113 @@
                         "schema": {
                             "$ref": "#/definitions/models.Status"
                         }
+                    },
+                    "400": {
+                        "description": "Некорректный идентификатор",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Статус с заданным идентификатором не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Позволяет удалить статус. Доступно только для администраторов.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Удалить статус",
+                "operationId": "delete-status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор статуса",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Некорректный идентификатор",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Статус с заданным идентификатором не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "С удаляемым статусом есть связанные задачи",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Позволяет обновить данные статуса. Доступно только для администраторов.",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Обновить статус",
+                "operationId": "update-status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор статуса",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Status"
+                        }
+                    },
+                    "400": {
+                        "description": "Параметры статуса некорректны",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Статус с заданным идентификатором не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -41,6 +230,62 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "pagination.Order": {
+            "type": "string",
+            "enum": [
+                "asc",
+                "desc"
+            ],
+            "x-enum-varnames": [
+                "Asc",
+                "Desc"
+            ]
+        },
+        "pagination.Pagination": {
+            "type": "object",
+            "properties": {
+                "options": {
+                    "$ref": "#/definitions/pagination.PagingOptions"
+                },
+                "total_items": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pagination.Paging-models_Status": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Status"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/pagination.Pagination"
+                }
+            }
+        },
+        "pagination.PagingOptions": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "$ref": "#/definitions/pagination.Order"
+                },
+                "order_by": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
                 }
             }
         }

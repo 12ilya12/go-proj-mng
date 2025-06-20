@@ -26,6 +26,17 @@ func NewStatusController(statusService services.StatusService) StatusController 
 	return StatusController{statusService, vld}
 }
 
+// @Summary Получить все статусы
+// @Description Позволяет получить список всех статусов. Доступно всем пользователям.
+// @ID get-all-statuses
+// @Produce json
+// @Param Page query int false "Номер страницы"
+// @Param PageSize query int false "Размер страницы"
+// @Param Order query pagination.Order false "По возрастанию/по убыванию"
+// @Param OrderBy query string false "Характеристика для сортировки"
+// @Success 200 {object} pagination.Paging[models.Status]
+// @Failure 502 {string} string
+// @Router /statuses [get]
 func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 	var pagingOptions pagination.PagingOptions
 	utils.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
@@ -39,13 +50,15 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(statusesWithPaging)
 }
 
-// GetById возвращает статус задачи по идентификатору
-// @Summary Получить статус задачи по идентификатору
-// @Description получить статус задачи по идентификатору
+// @Summary Получить статус по идентификатору
+// @Description Позволяет получить статус по его идентификатору. Доступно всем пользователям.
 // @ID get-status
 // @Produce  json
 // @Param id path int true "Идентификатор статуса"
 // @Success 200 {object} models.Status
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Статус с заданным идентификатором не найден"
+// @Failure 502 {string} string
 // @Router /statuses/{id} [get]
 func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -68,6 +81,14 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(status)
 }
 
+// @Summary Создать статус
+// @Description Позволяет создать новый статус. Доступно только для администраторов.
+// @ID create-status
+// @Produce  json
+// @Success 200 {object} models.Status
+// @Failure 400 {string} string "Параметры нового статуса некорректны"
+// @Failure 502 {string} string
+// @Router /statuses [post]
 func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 	status := models.Status{}
 	err := json.NewDecoder(r.Body).Decode(&status)
@@ -95,6 +116,16 @@ func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(status)
 }
 
+// @Summary Обновить статус
+// @Description Позволяет обновить данные статуса. Доступно только для администраторов.
+// @ID update-status
+// @Produce json
+// @Param id path int true "Идентификатор статуса"
+// @Success 200 {object} models.Status
+// @Failure 400 {string} string "Параметры статуса некорректны"
+// @Failure 404 {string} string "Статус с заданным идентификатором не найден"
+// @Failure 502 {string} string
+// @Router /statuses/{id} [patch]
 func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -133,6 +164,17 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedStatus)
 }
 
+// @Summary Удалить статус
+// @Description Позволяет удалить статус. Доступно только для администраторов.
+// @ID delete-status
+// @Produce json
+// @Param id path int true "Идентификатор статуса"
+// @Success 200
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Статус с заданным идентификатором не найден"
+// @Failure 409 {string} string "С удаляемым статусом есть связанные задачи"
+// @Failure 502 {string} string
+// @Router /statuses/{id} [delete]
 func (sc *StatusController) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
