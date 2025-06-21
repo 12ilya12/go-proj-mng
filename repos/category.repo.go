@@ -115,7 +115,6 @@ func (cr *CategoryRepository) Delete(id uint) (err error) {
 		return
 	}
 
-	//TODO: Проверить отработает ли хук для каскадного удаления задач, связанных с удаляемой категорией
 	err = cr.DB.Delete(&category, id).Error
 	return
 }

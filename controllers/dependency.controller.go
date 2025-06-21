@@ -55,7 +55,6 @@ func (dc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 
 	dependenciesWithPaging, err := dc.dependencyService.Get(uint(taskId), pagingOptions)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}

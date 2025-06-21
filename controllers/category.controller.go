@@ -111,7 +111,6 @@ func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
 
 	err = cc.categoryService.Create(&category)
 	if err != nil {
-		//TODO: Проверить какие ошибки может выдать gorm
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
