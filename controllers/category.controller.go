@@ -26,6 +26,18 @@ func NewCategoryController(categoryService services.CategoryService) CategoryCon
 	return CategoryController{categoryService, vld}
 }
 
+// @Summary Получить все категории
+// @Description Позволяет получить список всех категорий. Доступно всем пользователям.
+// @ID get-all-categories
+// @Tags Категории
+// @Produce json
+// @Param Page query int false "Номер страницы"
+// @Param PageSize query int false "Размер страницы"
+// @Param Order query pagination.Order false "По возрастанию/по убыванию"
+// @Param OrderBy query string false "Характеристика для сортировки"
+// @Success 200 {object} pagination.Paging[models.Category]
+// @Failure 502 {string} string
+// @Router /categories [get]
 func (cc *CategoryController) GetAll(w http.ResponseWriter, r *http.Request) {
 	var pagingOptions pagination.PagingOptions
 	u.QueryDecoder.Decode(&pagingOptions, r.URL.Query())
@@ -39,6 +51,17 @@ func (cc *CategoryController) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(categoriesWithPaging)
 }
 
+// @Summary Получить категорию по идентификатору
+// @Description Позволяет получить категорию по его идентификатору. Доступно всем пользователям.
+// @ID get-category
+// @Tags Категории
+// @Produce  json
+// @Param id path int true "Идентификатор категории"
+// @Success 200 {object} models.Category
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Категория с заданным идентификатором не найден"
+// @Failure 502 {string} string
+// @Router /categories/{id} [get]
 func (cc *CategoryController) GetById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -60,6 +83,15 @@ func (cc *CategoryController) GetById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
+// @Summary Создать категорию
+// @Description Позволяет создать новую категорию. Доступно только для администраторов.
+// @ID create-category
+// @Tags Категории
+// @Produce  json
+// @Success 200 {object} models.Category
+// @Failure 400 {string} string "Параметры новой категории некорректны"
+// @Failure 502 {string} string
+// @Router /categories [post]
 func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
 	category := models.Category{}
 	err := json.NewDecoder(r.Body).Decode(&category)
@@ -88,6 +120,17 @@ func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
+// @Summary Обновить категорию
+// @Description Позволяет обновить данные категории. Доступно только для администраторов.
+// @ID update-category
+// @Tags Категории
+// @Produce json
+// @Param id path int true "Идентификатор категории"
+// @Success 200 {object} models.Category
+// @Failure 400 {string} string "Параметры категории некорректны"
+// @Failure 404 {string} string "Категория с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /categories/{id} [patch]
 func (cc *CategoryController) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -126,6 +169,21 @@ func (cc *CategoryController) Update(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedCategory)
 }
 
+type HasTasks struct {
+	HasTasks bool `json:"hasTasks"`
+}
+
+// @Summary Есть ли у категории связанные задачи
+// @Description Позволяет получить информацию о том, есть ли связанные задачи с категорией по ID. Доступно для всех пользователей.
+// @ID has-tasks-category
+// @Tags Категории
+// @Produce json
+// @Param id path int true "Идентификатор категории"
+// @Success 200 {object} controllers.HasTasks
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Категория с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /categories/{id}/has-tasks [get]
 func (cc *CategoryController) HasTasks(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -143,9 +201,23 @@ func (cc *CategoryController) HasTasks(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	u.Respond(w, map[string]interface{}{"hasTasks": hasTasks})
+	hasTasksResp := HasTasks{HasTasks: hasTasks}
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(hasTasksResp)
 }
 
+// @Summary Удалить категорию
+// @Description Позволяет удалить категорию. Доступно только для администраторов.
+// @ID delete-category
+// @Tags Категории
+// @Produce json
+// @Param id path int true "Идентификатор категории"
+// @Success 200
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Категория с заданным идентификатором не найдена"
+// @Failure 409 {string} string "С удаляемой категорией есть связанные задачи"
+// @Failure 502 {string} string
+// @Router /categories/{id} [delete]
 func (cc *CategoryController) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -167,6 +239,17 @@ func (cc *CategoryController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary Принудительно удалить категорию со связанными задачами
+// @Description Позволяет принудительно удалить категорию по идентификатору вместе со всеми связаннами задачами каскадно. Доступно только для администраторов.
+// @ID delete-force-category
+// @Tags Категории
+// @Produce json
+// @Param id path int true "Идентификатор категории"
+// @Success 200
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Категория с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /categories/{id}/force [delete]
 func (cc *CategoryController) DeleteForce(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

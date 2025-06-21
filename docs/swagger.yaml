@@ -1,9 +1,72 @@
 definitions:
+  controllers.AccessToken:
+    properties:
+      access_token:
+        type: string
+    type: object
+  controllers.HasTasks:
+    properties:
+      hasTasks:
+        type: boolean
+    type: object
+  models.Category:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Dependency:
+    properties:
+      child_task_id:
+        type: integer
+      id:
+        type: integer
+      parent_task_id:
+        type: integer
+    required:
+    - child_task_id
+    - parent_task_id
+    type: object
   models.Status:
     properties:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  models.Task:
+    properties:
+      category_id:
+        type: integer
+      deadline:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      priority:
+        type: integer
+      status_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      fullname:
+        type: string
+      id:
+        type: integer
+      login:
+        type: string
+      password:
+        type: string
+      role:
         type: string
     type: object
   pagination.Order:
@@ -23,11 +86,38 @@ definitions:
       total_pages:
         type: integer
     type: object
+  pagination.Paging-models_Category:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.Category'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+    type: object
+  pagination.Paging-models_Dependency:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.Dependency'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+    type: object
   pagination.Paging-models_Status:
     properties:
       items:
         items:
           $ref: '#/definitions/models.Status'
+        type: array
+      pagination:
+        $ref: '#/definitions/pagination.Pagination'
+    type: object
+  pagination.Paging-models_Task:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/models.Task'
         type: array
       pagination:
         $ref: '#/definitions/pagination.Pagination'
@@ -46,6 +136,270 @@ definitions:
 info:
   contact: {}
 paths:
+  /auth/login:
+    post:
+      description: Позволяет авторизовать пользователя. Доступно всем.
+      operationId: login-user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.AccessToken'
+        "400":
+          description: Параметры пользователя некорректны
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Авторизовать пользователя
+      tags:
+      - Пользователи
+  /auth/register:
+    post:
+      description: Позволяет зарегистрировать нового пользователя. Доступно всем.
+      operationId: create-user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Параметры пользователя некорректны
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Создать пользователя
+      tags:
+      - Пользователи
+  /categories:
+    get:
+      description: Позволяет получить список всех категорий. Доступно всем пользователям.
+      operationId: get-all-categories
+      parameters:
+      - description: Номер страницы
+        in: query
+        name: Page
+        type: integer
+      - description: Размер страницы
+        in: query
+        name: PageSize
+        type: integer
+      - description: По возрастанию/по убыванию
+        enum:
+        - asc
+        - desc
+        in: query
+        name: Order
+        type: string
+      - description: Характеристика для сортировки
+        in: query
+        name: OrderBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Paging-models_Category'
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить все категории
+      tags:
+      - Категории
+    post:
+      description: Позволяет создать новую категорию. Доступно только для администраторов.
+      operationId: create-category
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Параметры новой категории некорректны
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Создать категорию
+      tags:
+      - Категории
+  /categories/{id}:
+    delete:
+      description: Позволяет удалить категорию. Доступно только для администраторов.
+      operationId: delete-category
+      parameters:
+      - description: Идентификатор категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Категория с заданным идентификатором не найдена
+          schema:
+            type: string
+        "409":
+          description: С удаляемой категорией есть связанные задачи
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Удалить категорию
+      tags:
+      - Категории
+    get:
+      description: Позволяет получить категорию по его идентификатору. Доступно всем
+        пользователям.
+      operationId: get-category
+      parameters:
+      - description: Идентификатор категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Категория с заданным идентификатором не найден
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить категорию по идентификатору
+      tags:
+      - Категории
+    patch:
+      description: Позволяет обновить данные категории. Доступно только для администраторов.
+      operationId: update-category
+      parameters:
+      - description: Идентификатор категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Параметры категории некорректны
+          schema:
+            type: string
+        "404":
+          description: Категория с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Обновить категорию
+      tags:
+      - Категории
+  /categories/{id}/force:
+    delete:
+      description: Позволяет принудительно удалить категорию по идентификатору вместе
+        со всеми связаннами задачами каскадно. Доступно только для администраторов.
+      operationId: delete-force-category
+      parameters:
+      - description: Идентификатор категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Категория с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Принудительно удалить категорию со связанными задачами
+      tags:
+      - Категории
+  /categories/{id}/has-tasks:
+    get:
+      description: Позволяет получить информацию о том, есть ли связанные задачи с
+        категорией по ID. Доступно для всех пользователей.
+      operationId: has-tasks-category
+      parameters:
+      - description: Идентификатор категории
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.HasTasks'
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Категория с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Есть ли у категории связанные задачи
+      tags:
+      - Категории
   /statuses:
     get:
       description: Позволяет получить список всех статусов. Доступно всем пользователям.
@@ -82,6 +436,8 @@ paths:
           schema:
             type: string
       summary: Получить все статусы
+      tags:
+      - Статусы
     post:
       description: Позволяет создать новый статус. Доступно только для администраторов.
       operationId: create-status
@@ -101,6 +457,8 @@ paths:
           schema:
             type: string
       summary: Создать статус
+      tags:
+      - Статусы
   /statuses/{id}:
     delete:
       description: Позволяет удалить статус. Доступно только для администраторов.
@@ -133,6 +491,8 @@ paths:
           schema:
             type: string
       summary: Удалить статус
+      tags:
+      - Статусы
     get:
       description: Позволяет получить статус по его идентификатору. Доступно всем
         пользователям.
@@ -163,6 +523,8 @@ paths:
           schema:
             type: string
       summary: Получить статус по идентификатору
+      tags:
+      - Статусы
     patch:
       description: Позволяет обновить данные статуса. Доступно только для администраторов.
       operationId: update-status
@@ -192,4 +554,285 @@ paths:
           schema:
             type: string
       summary: Обновить статус
+      tags:
+      - Статусы
+  /tasks:
+    get:
+      description: Позволяет получить список всех задач. Доступно всем пользователям.
+        Администратор получает весь список задач. Обычный пользователь только свои
+        задачи.
+      operationId: get-all-tasks
+      parameters:
+      - description: Номер страницы
+        in: query
+        name: Page
+        type: integer
+      - description: Размер страницы
+        in: query
+        name: PageSize
+        type: integer
+      - description: По возрастанию/по убыванию
+        enum:
+        - asc
+        - desc
+        in: query
+        name: Order
+        type: string
+      - description: Характеристика для сортировки
+        in: query
+        name: OrderBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Paging-models_Task'
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить все задачи
+      tags:
+      - Задачи
+    post:
+      description: Позволяет создать новую задачу. Доступно только для администраторов.
+      operationId: create-task
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Параметры новой задачи некорректны
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Создать задачу
+      tags:
+      - Задачи
+  /tasks/{id}:
+    delete:
+      description: Позволяет удалить задачу. Доступно только для администраторов.
+      operationId: delete-task
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Задача с заданным идентификатором не найдена
+          schema:
+            type: string
+        "409":
+          description: Удаляемая задача связана с другой задачей
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Удалить задачу
+      tags:
+      - Задачи
+    get:
+      description: Позволяет получить задачу по его идентификатору. Доступно всем
+        пользователям.
+      operationId: get-task
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Задача с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить задачу по идентификатору
+      tags:
+      - Задачи
+    patch:
+      description: Позволяет обновить данные задачи. Доступно для администраторов
+        и пользователей, но пользователь может изменить только статус своей задачи.
+      operationId: update-task
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Параметры задачи некорректны
+          schema:
+            type: string
+        "404":
+          description: Задача с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Обновить задачу
+      tags:
+      - Задачи
+  /tasks/{taskId}/dependencies:
+    get:
+      description: Позволяет получить список всех зависимостей задачи. Доступно всем
+        пользователям.
+      operationId: get-dependencies
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: taskId
+        required: true
+        type: integer
+      - description: Номер страницы
+        in: query
+        name: Page
+        type: integer
+      - description: Размер страницы
+        in: query
+        name: PageSize
+        type: integer
+      - description: По возрастанию/по убыванию
+        enum:
+        - asc
+        - desc
+        in: query
+        name: Order
+        type: string
+      - description: Характеристика для сортировки
+        in: query
+        name: OrderBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pagination.Paging-models_Dependency'
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Задача с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Получить все зависимости задачи
+      tags:
+      - Зависимости задач
+    post:
+      description: Позволяет добавить зависимость у задачи. Доступно всем пользователям,
+        но пользователи могут создавать зависимости только между своими задачами.
+      operationId: create-dependency
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: taskId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Dependency'
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Задача с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Добавить зависимость у задачи
+      tags:
+      - Зависимости задач
+  /tasks/{taskId}/dependencies/{dependencyId}:
+    delete:
+      description: Позволяет удалить зависимость у задачи по идентификатору. Доступно
+        всем пользователям.
+      operationId: delete-dependency
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: taskId
+        required: true
+        type: integer
+      - description: Идентификатор зависимости
+        in: path
+        name: dependencyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Некорректный идентификатор
+          schema:
+            type: string
+        "404":
+          description: Задача или зависимость с заданным идентификатором не найдена
+          schema:
+            type: string
+        "502":
+          description: Bad Gateway
+          schema:
+            type: string
+      summary: Удалить зависимость
+      tags:
+      - Зависимости задач
 swagger: "2.0"

@@ -29,6 +29,7 @@ func NewStatusController(statusService services.StatusService) StatusController 
 // @Summary Получить все статусы
 // @Description Позволяет получить список всех статусов. Доступно всем пользователям.
 // @ID get-all-statuses
+// @Tags Статусы
 // @Produce json
 // @Param Page query int false "Номер страницы"
 // @Param PageSize query int false "Размер страницы"
@@ -53,6 +54,7 @@ func (sc *StatusController) GetAll(w http.ResponseWriter, r *http.Request) {
 // @Summary Получить статус по идентификатору
 // @Description Позволяет получить статус по его идентификатору. Доступно всем пользователям.
 // @ID get-status
+// @Tags Статусы
 // @Produce  json
 // @Param id path int true "Идентификатор статуса"
 // @Success 200 {object} models.Status
@@ -84,6 +86,7 @@ func (sc *StatusController) GetById(w http.ResponseWriter, r *http.Request) {
 // @Summary Создать статус
 // @Description Позволяет создать новый статус. Доступно только для администраторов.
 // @ID create-status
+// @Tags Статусы
 // @Produce  json
 // @Success 200 {object} models.Status
 // @Failure 400 {string} string "Параметры нового статуса некорректны"
@@ -119,6 +122,7 @@ func (sc *StatusController) Create(w http.ResponseWriter, r *http.Request) {
 // @Summary Обновить статус
 // @Description Позволяет обновить данные статуса. Доступно только для администраторов.
 // @ID update-status
+// @Tags Статусы
 // @Produce json
 // @Param id path int true "Идентификатор статуса"
 // @Success 200 {object} models.Status
@@ -167,6 +171,7 @@ func (sc *StatusController) Update(w http.ResponseWriter, r *http.Request) {
 // @Summary Удалить статус
 // @Description Позволяет удалить статус. Доступно только для администраторов.
 // @ID delete-status
+// @Tags Статусы
 // @Produce json
 // @Param id path int true "Идентификатор статуса"
 // @Success 200

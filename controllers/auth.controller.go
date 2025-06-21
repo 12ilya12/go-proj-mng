@@ -21,6 +21,15 @@ func NewAuthController(authService services.AuthService) AuthController {
 	return AuthController{authService, vld}
 }
 
+// @Summary Создать пользователя
+// @Description Позволяет зарегистрировать нового пользователя. Доступно всем.
+// @ID create-user
+// @Tags Пользователи
+// @Produce  json
+// @Success 200 {object} models.User
+// @Failure 400 {string} string "Параметры пользователя некорректны"
+// @Failure 502 {string} string
+// @Router /auth/register [post]
 func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	userDto := models.User{}
 	//Декодируем тело запроса в структуру dto
@@ -48,6 +57,19 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(userDto)
 }
 
+type AccessToken struct {
+	AccessToken string `json:"access_token"`
+}
+
+// @Summary Авторизовать пользователя
+// @Description Позволяет авторизовать пользователя. Доступно всем.
+// @ID login-user
+// @Tags Пользователи
+// @Produce  json
+// @Success 200 {object} controllers.AccessToken
+// @Failure 400 {string} string "Параметры пользователя некорректны"
+// @Failure 502 {string} string
+// @Router /auth/login [post]
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	userDto := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&userDto)

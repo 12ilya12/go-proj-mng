@@ -27,6 +27,18 @@ func NewTaskController(taskService services.TaskService) TaskController {
 	return TaskController{taskService, vld}
 }
 
+// @Summary Получить все задачи
+// @Description Позволяет получить список всех задач. Доступно всем пользователям. Администратор получает весь список задач. Обычный пользователь только свои задачи.
+// @ID get-all-tasks
+// @Tags Задачи
+// @Produce json
+// @Param Page query int false "Номер страницы"
+// @Param PageSize query int false "Размер страницы"
+// @Param Order query pagination.Order false "По возрастанию/по убыванию"
+// @Param OrderBy query string false "Характеристика для сортировки"
+// @Success 200 {object} pagination.Paging[models.Task]
+// @Failure 502 {string} string
+// @Router /tasks [get]
 func (sc *TaskController) GetAll(w http.ResponseWriter, r *http.Request) {
 	//Считываем параметры пагинации из query
 	var pagingOptions pagination.PagingOptions
@@ -51,6 +63,17 @@ func (sc *TaskController) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasksWithPaging)
 }
 
+// @Summary Получить задачу по идентификатору
+// @Description Позволяет получить задачу по его идентификатору. Доступно всем пользователям.
+// @ID get-task
+// @Tags Задачи
+// @Produce  json
+// @Param id path int true "Идентификатор задачи"
+// @Success 200 {object} models.Task
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Задача с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /tasks/{id} [get]
 func (sc *TaskController) GetById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -72,6 +95,15 @@ func (sc *TaskController) GetById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
+// @Summary Создать задачу
+// @Description Позволяет создать новую задачу. Доступно только для администраторов.
+// @ID create-task
+// @Tags Задачи
+// @Produce  json
+// @Success 200 {object} models.Task
+// @Failure 400 {string} string "Параметры новой задачи некорректны"
+// @Failure 502 {string} string
+// @Router /tasks [post]
 func (sc *TaskController) Create(w http.ResponseWriter, r *http.Request) {
 	task := models.Task{}
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -99,6 +131,17 @@ func (sc *TaskController) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
+// @Summary Обновить задачу
+// @Description Позволяет обновить данные задачи. Доступно для администраторов и пользователей, но пользователь может изменить только статус своей задачи.
+// @ID update-task
+// @Tags Задачи
+// @Produce json
+// @Param id path int true "Идентификатор задачи"
+// @Success 200 {object} models.Task
+// @Failure 400 {string} string "Параметры задачи некорректны"
+// @Failure 404 {string} string "Задача с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /tasks/{id} [patch]
 func (sc *TaskController) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -134,6 +177,18 @@ func (sc *TaskController) Update(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedTask)
 }
 
+// @Summary Удалить задачу
+// @Description Позволяет удалить задачу. Доступно только для администраторов.
+// @ID delete-task
+// @Tags Задачи
+// @Produce json
+// @Param id path int true "Идентификатор задачи"
+// @Success 200
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Задача с заданным идентификатором не найдена"
+// @Failure 409 {string} string "Удаляемая задача связана с другой задачей"
+// @Failure 502 {string} string
+// @Router /tasks/{id} [delete]
 func (sc *TaskController) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

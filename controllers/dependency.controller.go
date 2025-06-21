@@ -27,6 +27,21 @@ func NewDependencyController(dependencyService services.DependencyService) Depen
 	return DependencyController{dependencyService, vld}
 }
 
+// @Summary Получить все зависимости задачи
+// @Description Позволяет получить список всех зависимостей задачи. Доступно всем пользователям.
+// @ID get-dependencies
+// @Tags Зависимости задач
+// @Produce json
+// @Param taskId path int true "Идентификатор задачи"
+// @Param Page query int false "Номер страницы"
+// @Param PageSize query int false "Размер страницы"
+// @Param Order query pagination.Order false "По возрастанию/по убыванию"
+// @Param OrderBy query string false "Характеристика для сортировки"
+// @Success 200 {object} pagination.Paging[models.Dependency]
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Задача с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /tasks/{taskId}/dependencies [get]
 func (dc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskId, err := strconv.Atoi(vars["taskId"])
@@ -48,6 +63,17 @@ func (dc *DependencyController) Get(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dependenciesWithPaging)
 }
 
+// @Summary Добавить зависимость у задачи
+// @Description Позволяет добавить зависимость у задачи. Доступно всем пользователям, но пользователи могут создавать зависимости только между своими задачами.
+// @ID create-dependency
+// @Tags Зависимости задач
+// @Produce json
+// @Param taskId path int true "Идентификатор задачи"
+// @Success 200 {object} models.Dependency
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Задача с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /tasks/{taskId}/dependencies [post]
 func (dc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskId, err := strconv.Atoi(vars["taskId"])
@@ -96,6 +122,18 @@ func (dc *DependencyController) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dependency)
 }
 
+// @Summary Удалить зависимость
+// @Description Позволяет удалить зависимость у задачи по идентификатору. Доступно всем пользователям.
+// @ID delete-dependency
+// @Tags Зависимости задач
+// @Produce json
+// @Param taskId path int true "Идентификатор задачи"
+// @Param dependencyId path int true "Идентификатор зависимости"
+// @Success 200
+// @Failure 400 {string} string "Некорректный идентификатор"
+// @Failure 404 {string} string "Задача или зависимость с заданным идентификатором не найдена"
+// @Failure 502 {string} string
+// @Router /tasks/{taskId}/dependencies/{dependencyId} [delete]
 func (dc *DependencyController) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskId, err := strconv.Atoi(vars["taskId"])
