@@ -71,6 +71,9 @@ func main() {
 	//Подключаем мидлвар для аутентификации по JWT
 	router.Use(middlewares.JwtAuthentication)
 
+	//Подключаем мидлвар для аудита действий пользователя
+	router.Use(middlewares.AuditMiddleware)
+
 	if config.ServerPort == "" {
 		config.ServerPort = "8000"
 	}
