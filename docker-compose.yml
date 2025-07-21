@@ -32,12 +32,16 @@ services:
       - app
   reminder:
     build:
-      context: ./reminder-service/
-      dockerfile: ./reminder-service/Dockerfile
+      context: ./reminder-service
+      dockerfile: ./Dockerfile
     ports:
       - '8001:8001'
     depends_on:
       - app
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 #  zookeeper:
 #    image: confluentinc/cp-zookeeper:7.3.0
 #    hostname: zookeeper
