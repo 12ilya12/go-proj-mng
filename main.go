@@ -33,12 +33,15 @@ func main() {
 	TaskRepo := repos.NewTaskRepository(initializers.DB)
 	DependencyRepo := repos.NewDependencyRepository(initializers.DB)
 
+	//Инициализация клиента напоминаний
+	ReminderClient := initializers.InitReminder()
+
 	//Инициализация сервисов
 	UserService := services.NewUserService(UserRepo)
 	AuthService := services.NewAuthService(UserService)
 	StatusService := services.NewStatusService(StatusRepo)
 	CategoryService := services.NewCategoryService(CategoryRepo)
-	TaskService := services.NewTaskService(TaskRepo, StatusRepo, CategoryRepo, UserRepo)
+	TaskService := services.NewTaskService(TaskRepo, StatusRepo, CategoryRepo, UserRepo, ReminderClient)
 	DependencyService := services.NewDependencyService(DependencyRepo, TaskRepo)
 
 	//Инициализация контроллеров
@@ -72,7 +75,7 @@ func main() {
 	router.Use(middlewares.JwtAuthentication)
 
 	//Подключаем мидлвар для аудита действий пользователя
-	router.Use(middlewares.AuditMiddleware)
+	//router.Use(middlewares.AuditMiddleware)
 
 	if config.ServerPort == "" {
 		config.ServerPort = "8000"

@@ -1,19 +1,25 @@
 package services
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"strings"
 
 	"github.com/12ilya12/go-proj-mng/common"
 	"github.com/12ilya12/go-proj-mng/models"
 	"github.com/12ilya12/go-proj-mng/pagination"
+	"github.com/12ilya12/go-proj-mng/reminder-service/gen/reminder"
 	"github.com/12ilya12/go-proj-mng/repos"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type TaskService struct {
-	taskRepo     repos.TaskRepository
-	statusRepo   repos.StatusRepository
-	categoryRepo repos.CategoryRepository
-	userRepo     repos.UserRepository
+	taskRepo       repos.TaskRepository
+	statusRepo     repos.StatusRepository
+	categoryRepo   repos.CategoryRepository
+	userRepo       repos.UserRepository
+	reminderClient reminder.ReminderServiceClient
 }
 
 func NewTaskService(
@@ -21,8 +27,10 @@ func NewTaskService(
 	statusRepo repos.StatusRepository,
 	categoryRepo repos.CategoryRepository,
 	userRepo repos.UserRepository,
+	reminderClient reminder.ReminderServiceClient,
+
 ) TaskService {
-	return TaskService{taskRepo, statusRepo, categoryRepo, userRepo}
+	return TaskService{taskRepo, statusRepo, categoryRepo, userRepo, reminderClient}
 }
 
 func (ts *TaskService) GetAll(pagingOptions pagination.PagingOptions, taskFilters common.TaskFilters) (tasksWithPaging pagination.Paging[models.Task], err error) {
@@ -33,6 +41,19 @@ func (ts *TaskService) GetAll(pagingOptions pagination.PagingOptions, taskFilter
 func (ts *TaskService) GetById(id uint) (task models.Task, err error) {
 	task, err = ts.taskRepo.GetById(id)
 	return
+}
+
+// Функция создания напоминания о задаче
+func (ts *TaskService) createTaskReminder(task *models.Task, daysBefore int32) {
+	_, err := ts.reminderClient.CreateReminder(context.Background(), &reminder.CreateReminderRequest{
+		TaskId:     fmt.Sprintf("%d", task.ID),
+		Message:    "Напоминание о скором наступлении дедлайна задачи " + task.Name,
+		DaysBefore: daysBefore,
+		Deadline:   timestamppb.New(task.Deadline),
+	})
+	if err != nil {
+		log.Printf("При создании напоминания произошла ошибка: %v", err)
+	}
 }
 
 func (ts *TaskService) Create(task *models.Task) (err error) {
@@ -53,6 +74,10 @@ func (ts *TaskService) Create(task *models.Task) (err error) {
 	}
 
 	err = ts.taskRepo.Create(task)
+
+	//Добавляем напоминание о задаче за 1 день до дедлайна
+	ts.createTaskReminder(task, 1)
+
 	return
 }
 

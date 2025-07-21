@@ -7,13 +7,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-func InitReminder() (reminder.ReminderServiceClient, error) {
-	conn, err := grpc.Dial("reminder-service:50051", grpc.WithInsecure())
+func InitReminder() reminder.ReminderServiceClient {
+	conn, err := grpc.NewClient("reminder-service:50051")
 	if err != nil {
 		log.Fatalf("Нет соединения: %v", err)
 	}
 	defer conn.Close()
 
 	reminderClient := reminder.NewReminderServiceClient(conn)
-	return reminderClient, nil
+	return reminderClient
 }
