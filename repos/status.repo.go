@@ -9,15 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
-type StatusRepository struct {
+type StatusRepository interface {
+	GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Status], err error)
+	GetById(id uint) (status models.Status, err error)
+	Create(status *models.Status) (err error)
+	Update(paramsForUpdate *models.Status) (updatedStatus models.Status, err error)
+	HasTasks(statusId uint) bool
+	Delete(id uint) (err error)
+}
+
+type StatusRepositoryImpl struct {
 	DB *gorm.DB
 }
 
-func NewStatusRepository(DB *gorm.DB) StatusRepository {
-	return StatusRepository{DB}
+func NewStatusRepositoryImpl(DB *gorm.DB) StatusRepository {
+	return &StatusRepositoryImpl{DB}
 }
 
-func (sr *StatusRepository) GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Status] /* statuses []models.Status */, err error) {
+func (sr *StatusRepositoryImpl) GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Status] /* statuses []models.Status */, err error) {
 	//Сортировка. По умолчанию по возрастанию идентификатора.
 	var orderRule string
 	if pagingOptions.OrderBy == "" {
@@ -63,17 +72,17 @@ func (sr *StatusRepository) GetAll(pagingOptions pagination.PagingOptions) (stat
 	return
 }
 
-func (sr *StatusRepository) GetById(id uint) (status models.Status, err error) {
+func (sr *StatusRepositoryImpl) GetById(id uint) (status models.Status, err error) {
 	err = sr.DB.First(&status, id).Error
 	return
 }
 
-func (sr *StatusRepository) Create(status *models.Status) (err error) {
+func (sr *StatusRepositoryImpl) Create(status *models.Status) (err error) {
 	err = sr.DB.Create(&status).Error
 	return
 }
 
-func (sr *StatusRepository) Update(paramsForUpdate *models.Status) (updatedStatus models.Status, err error) {
+func (sr *StatusRepositoryImpl) Update(paramsForUpdate *models.Status) (updatedStatus models.Status, err error) {
 	updatedStatus = models.Status{}
 	err = sr.DB.First(&updatedStatus, paramsForUpdate.ID).Error
 	if err != nil {
@@ -85,13 +94,13 @@ func (sr *StatusRepository) Update(paramsForUpdate *models.Status) (updatedStatu
 	return
 }
 
-func (sr *StatusRepository) HasTasks(statusId uint) bool {
+func (sr *StatusRepositoryImpl) HasTasks(statusId uint) bool {
 	var tasksWithStatusCount int64
 	sr.DB.Table("tasks").Where("status_id = ?", statusId).Count(&tasksWithStatusCount)
 	return tasksWithStatusCount > 0
 }
 
-func (sr *StatusRepository) Delete(id uint) (err error) {
+func (sr *StatusRepositoryImpl) Delete(id uint) (err error) {
 	err = sr.DB.Delete(&models.Status{}, id).Error
 	return
 }
