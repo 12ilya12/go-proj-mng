@@ -5,6 +5,10 @@ go 1.24.1
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/jinzhu/gorm v1.9.16
+	github.com/swaggo/swag v1.16.4
+	google.golang.org/protobuf v1.36.6
+	gorm.io/driver/postgres v1.5.11
+	gorm.io/gorm v1.30.0
 )
 
 require (
@@ -42,18 +46,14 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
-	github.com/swaggo/swag v1.16.4 // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.5.11 // indirect
-	gorm.io/gorm v1.30.0 // indirect
 )
 
 require (
@@ -61,7 +61,7 @@ require (
 	github.com/IBM/sarama v1.45.2
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/mux v1.8.1 // indirect
+	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/schema v1.4.1
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joho/godotenv v1.5.1

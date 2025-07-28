@@ -17,7 +17,7 @@ type MockStatusRepo struct {
 }
 
 func (m *MockStatusRepo) GetAll(pagingOptions pagination.PagingOptions) (pagination.Paging[models.Status], error) {
-	args := m.Called()
+	args := m.Called(pagingOptions)
 	return args.Get(0).(pagination.Paging[models.Status]), args.Error(1)
 }
 
@@ -50,6 +50,7 @@ func TestStatusService_GetAll(t *testing.T) {
 	mockRepo := new(MockStatusRepo)
 	service := services.NewStatusServiceImpl(mockRepo)
 
+	pagingOptions := pagination.PagingOptions{}
 	expectedStatuses := pagination.Paging[models.Status]{
 		Items: []models.Status{
 			{ID: 1, Name: "Active"},
@@ -58,7 +59,7 @@ func TestStatusService_GetAll(t *testing.T) {
 		Pagination: pagination.Pagination{},
 	}
 
-	mockRepo.On("GetAll").Return(expectedStatuses, nil)
+	mockRepo.On("GetAll", pagingOptions).Return(expectedStatuses, nil)
 
 	statuses, err := service.GetAll(pagination.PagingOptions{})
 
