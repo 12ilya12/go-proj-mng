@@ -29,7 +29,7 @@ func main() {
 	//Инициализация репозиториев
 	UserRepo := repos.NewUserRepository(initializers.DB)
 	StatusRepo := repos.NewStatusRepositoryImpl(initializers.DB)
-	CategoryRepo := repos.NewCategoryRepository(initializers.DB)
+	CategoryRepo := repos.NewCategoryRepositoryImpl(initializers.DB)
 	TaskRepo := repos.NewTaskRepository(initializers.DB)
 	DependencyRepo := repos.NewDependencyRepository(initializers.DB)
 
@@ -40,7 +40,7 @@ func main() {
 	UserService := services.NewUserService(UserRepo)
 	AuthService := services.NewAuthService(UserService)
 	StatusService := services.NewStatusServiceImpl(StatusRepo)
-	CategoryService := services.NewCategoryService(CategoryRepo)
+	CategoryService := services.NewCategoryServiceImpl(CategoryRepo)
 	TaskService := services.NewTaskService(TaskRepo, StatusRepo, CategoryRepo, UserRepo, ReminderClient)
 	DependencyService := services.NewDependencyService(DependencyRepo, TaskRepo)
 

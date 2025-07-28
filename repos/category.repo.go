@@ -9,15 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
-type CategoryRepository struct {
+type CategoryRepository interface {
+	GetAll(pagingOptions pagination.PagingOptions) (pagination.Paging[models.Category], error)
+	GetById(id uint) (models.Category, error)
+	Create(status *models.Category) error
+	Update(paramsForUpdate *models.Category) (models.Category, error)
+	HasTasks(statusId uint) (bool, error)
+	Delete(id uint) error
+}
+
+type CategoryRepositoryImpl struct {
 	DB *gorm.DB
 }
 
-func NewCategoryRepository(DB *gorm.DB) CategoryRepository {
-	return CategoryRepository{DB}
+func NewCategoryRepositoryImpl(DB *gorm.DB) CategoryRepository {
+	return &CategoryRepositoryImpl{DB}
 }
 
-func (cr *CategoryRepository) GetAll(pagingOptions pagination.PagingOptions) (categoriesWithPaging pagination.Paging[models.Category] /* categories []models.Category */, err error) {
+func (cr *CategoryRepositoryImpl) GetAll(pagingOptions pagination.PagingOptions) (categoriesWithPaging pagination.Paging[models.Category], err error) {
 	//Сортировка. По умолчанию по возрастанию идентификатора.
 	var orderRule string
 	if pagingOptions.OrderBy == "" {
@@ -63,17 +72,17 @@ func (cr *CategoryRepository) GetAll(pagingOptions pagination.PagingOptions) (ca
 	return
 }
 
-func (cr *CategoryRepository) GetById(id uint) (category models.Category, err error) {
+func (cr *CategoryRepositoryImpl) GetById(id uint) (category models.Category, err error) {
 	err = cr.DB.First(&category, id).Error
 	return
 }
 
-func (cr *CategoryRepository) Create(category *models.Category) (err error) {
+func (cr *CategoryRepositoryImpl) Create(category *models.Category) (err error) {
 	err = cr.DB.Create(&category).Error
 	return
 }
 
-func (cr *CategoryRepository) Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error) {
+func (cr *CategoryRepositoryImpl) Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error) {
 	updatedCategory = models.Category{}
 	err = cr.DB.First(&updatedCategory, paramsForUpdate.ID).Error
 	if err != nil {
@@ -85,7 +94,7 @@ func (cr *CategoryRepository) Update(paramsForUpdate *models.Category) (updatedC
 	return
 }
 
-func (cr *CategoryRepository) HasTasks(id uint) (hasTasks bool, err error) {
+func (cr *CategoryRepositoryImpl) HasTasks(id uint) (hasTasks bool, err error) {
 	//Проверка наличия категории с заданным идентификатором
 	err = cr.DB.First(&models.Category{}, id).Error
 	if err != nil {
@@ -99,14 +108,7 @@ func (cr *CategoryRepository) HasTasks(id uint) (hasTasks bool, err error) {
 	return
 }
 
-/* func (cr *CategoryRepository) Delete(id uint) (err error) {
-
-
-	err = cr.DB.Delete(&models.Category{}, id).Error
-	return
-} */
-
-func (cr *CategoryRepository) Delete(id uint) (err error) {
+func (cr *CategoryRepositoryImpl) Delete(id uint) (err error) {
 	//Проверка наличия категории с заданным идентификатором
 	category := models.Category{}
 	err = cr.DB.First(&category, id).Error

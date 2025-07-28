@@ -7,40 +7,50 @@ import (
 	"github.com/12ilya12/go-proj-mng/repos"
 )
 
-type CategoryService struct {
+type CategoryService interface {
+	GetAll(pagingOptions pagination.PagingOptions) (statusesWithPaging pagination.Paging[models.Category], err error)
+	GetById(id uint) (status models.Category, err error)
+	Create(status *models.Category) (err error)
+	Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error)
+	HasTasks(id uint) (hasTasks bool, err error)
+	Delete(id uint) (err error)
+	DeleteForce(id uint) (err error)
+}
+
+type CategoryServiceImpl struct {
 	categoryRepo repos.CategoryRepository
 }
 
-func NewCategoryService(categoryRepo repos.CategoryRepository) CategoryService {
-	return CategoryService{categoryRepo}
+func NewCategoryServiceImpl(categoryRepo repos.CategoryRepository) CategoryService {
+	return &CategoryServiceImpl{categoryRepo}
 }
 
-func (ss *CategoryService) GetAll(pagingOptions pagination.PagingOptions) (categoriesWithPaging pagination.Paging[models.Category], err error) {
+func (ss *CategoryServiceImpl) GetAll(pagingOptions pagination.PagingOptions) (categoriesWithPaging pagination.Paging[models.Category], err error) {
 	categoriesWithPaging, err = ss.categoryRepo.GetAll(pagingOptions)
 	return
 }
 
-func (ss *CategoryService) GetById(id uint) (category models.Category, err error) {
+func (ss *CategoryServiceImpl) GetById(id uint) (category models.Category, err error) {
 	category, err = ss.categoryRepo.GetById(id)
 	return
 }
 
-func (ss *CategoryService) Create(category *models.Category) (err error) {
+func (ss *CategoryServiceImpl) Create(category *models.Category) (err error) {
 	err = ss.categoryRepo.Create(category)
 	return
 }
 
-func (ss *CategoryService) Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error) {
+func (ss *CategoryServiceImpl) Update(paramsForUpdate *models.Category) (updatedCategory models.Category, err error) {
 	updatedCategory, err = ss.categoryRepo.Update(paramsForUpdate)
 	return
 }
 
-func (ss *CategoryService) HasTasks(id uint) (hasTasks bool, err error) {
+func (ss *CategoryServiceImpl) HasTasks(id uint) (hasTasks bool, err error) {
 	hasTasks, err = ss.categoryRepo.HasTasks(id)
 	return
 }
 
-func (ss *CategoryService) Delete(id uint) (err error) {
+func (ss *CategoryServiceImpl) Delete(id uint) (err error) {
 	hasTasks, err := ss.HasTasks(id)
 	if err != nil {
 		return
@@ -54,7 +64,7 @@ func (ss *CategoryService) Delete(id uint) (err error) {
 	return
 }
 
-func (ss *CategoryService) DeleteForce(id uint) (err error) {
+func (ss *CategoryServiceImpl) DeleteForce(id uint) (err error) {
 	err = ss.categoryRepo.Delete(id)
 	return
 }
