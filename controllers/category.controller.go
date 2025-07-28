@@ -115,6 +115,7 @@ func (cc *CategoryController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(category)
 }
